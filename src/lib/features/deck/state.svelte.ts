@@ -90,6 +90,10 @@ class DeckState {
 		return this.projects.filter((project) => !project.archived).sort((a, b) => a.order - b.order);
 	}
 
+	get hasCompletedTasks() {
+		return this.tasks.some((task) => task.completed && !task.archived);
+	}
+
 	get snapshot(): DeckSnapshot {
 		return { version: 1, projects: this.projects, tasks: this.tasks };
 	}
@@ -125,10 +129,6 @@ class DeckState {
 		return this.tasksForProject(projectId)
 			.filter((task) => task.archived)
 			.sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
-	}
-
-	completedTasksForProject(projectId: string) {
-		return this.tasksForProject(projectId).filter((task) => task.completed && !task.archived);
 	}
 
 	async addProject() {
@@ -217,9 +217,9 @@ class DeckState {
 		await saveTask(task);
 	}
 
-	async archiveCompletedTasks(projectId: string) {
+	async archiveAllCompletedTasks() {
 		const timestamp = now();
-		const tasks = this.completedTasksForProject(projectId);
+		const tasks = this.tasks.filter((task) => task.completed && !task.archived);
 
 		for (const task of tasks) {
 			task.archived = true;

@@ -23,6 +23,11 @@
 		</div>
 
 		<div class="topbar-actions">
+			{#if deck.hasCompletedTasks}
+				<button class="toolbar-button" onclick={() => deck.archiveAllCompletedTasks()}>
+					Archive done
+				</button>
+			{/if}
 			<button class="toolbar-button" onclick={() => deck.exportDeck()}>Export</button>
 			<button class="primary-button" onclick={() => deck.addProject()}>+ Project</button>
 		</div>
@@ -37,11 +42,9 @@
 					{project}
 					activeTasks={deck.activeTasksForProject(project.id)}
 					archivedTasks={deck.archivedTasksForProject(project.id)}
-					completedCount={deck.completedTasksForProject(project.id).length}
 					onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
 					onArchiveProject={(projectId) => deck.archiveProject(projectId)}
 					onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
-					onArchiveCompleted={(projectId) => deck.archiveCompletedTasks(projectId)}
 					onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
 					onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
 					onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}

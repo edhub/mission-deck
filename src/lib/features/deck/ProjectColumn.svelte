@@ -6,11 +6,9 @@
 		project,
 		activeTasks,
 		archivedTasks,
-		completedCount,
 		onRenameProject,
 		onArchiveProject,
 		onToggleCompletedExpanded,
-		onArchiveCompleted,
 		onAddTask,
 		onToggleCompleted,
 		onToggleFocus,
@@ -20,11 +18,9 @@
 		project: Project;
 		activeTasks: Task[];
 		archivedTasks: Task[];
-		completedCount: number;
 		onRenameProject: (projectId: string, name: string) => void;
 		onArchiveProject: (projectId: string) => void;
 		onToggleCompletedExpanded: (projectId: string) => void;
-		onArchiveCompleted: (projectId: string) => void;
 		onAddTask: (projectId: string, group: TaskGroup, content: string) => void;
 		onToggleCompleted: (taskId: string) => void;
 		onToggleFocus: (taskId: string) => void;
@@ -141,19 +137,11 @@
 		</div>
 
 		<section class="completed-section">
-			<div class="archive-header">
-				<button class="completed-toggle" onclick={() => onToggleCompletedExpanded(project.id)}>
-					<span>{project.completedExpanded ? '⌄' : '›'}</span>
-					Archive
-					<span class="completed-count">{archivedTasks.length}</span>
-				</button>
-
-				{#if completedCount > 0}
-					<button class="archive-completed-button" onclick={() => onArchiveCompleted(project.id)}>
-						Archive done
-					</button>
-				{/if}
-			</div>
+			<button class="completed-toggle" onclick={() => onToggleCompletedExpanded(project.id)}>
+				<span>{project.completedExpanded ? '⌄' : '›'}</span>
+				Archive
+				<span class="completed-count">{archivedTasks.length}</span>
+			</button>
 
 			{#if project.completedExpanded}
 				<div class="task-list completed-list">

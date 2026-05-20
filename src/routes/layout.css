@@ -376,18 +376,11 @@ h1 {
 	text-decoration: line-through;
 }
 
-.archive-header {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
-}
-
 .completed-toggle {
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
-	min-width: 0;
-	flex: 1;
+	width: 100%;
 	border: 0;
 	border-radius: 0.55rem;
 	padding: 0.35rem 0.2rem;
@@ -406,30 +399,6 @@ h1 {
 	margin-left: auto;
 	color: #b0b0b6;
 	font-weight: 500;
-}
-
-.archive-completed-button {
-	border: 0;
-	border-radius: 999px;
-	padding: 0.22rem 0.48rem;
-	background: rgb(0 0 0 / 4%);
-	color: #8a8a91;
-	font-size: 0.68rem;
-	font-weight: 600;
-	opacity: 0;
-	transition:
-		background 120ms ease,
-		opacity 120ms ease;
-}
-
-.project-column:hover .archive-completed-button,
-.archive-completed-button:focus-visible {
-	opacity: 1;
-}
-
-.archive-completed-button:hover {
-	background: rgb(0 0 0 / 8%);
-	color: #6e6e73;
 }
 
 .completed-list {
