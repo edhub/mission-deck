@@ -1,5 +1,7 @@
 import { Extension, type Editor } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
 
 export interface TaskKeymapOptions {
@@ -44,13 +46,14 @@ export function taskExtensions(options: TaskKeymapOptions = {}) {
 			heading: {
 				levels: [1, 2, 3]
 			},
-			bulletList: false,
-			orderedList: false,
-			listItem: false,
 			blockquote: false,
 			codeBlock: false,
 			horizontalRule: false,
 			trailingNode: false
+		}),
+		TaskList,
+		TaskItem.configure({
+			nested: true
 		}),
 		TaskKeymap.configure(options)
 	];

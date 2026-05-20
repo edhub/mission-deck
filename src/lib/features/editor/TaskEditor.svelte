@@ -13,7 +13,8 @@
 		autofocus = false,
 		onAutofocused,
 		surfaceClass = '',
-		defaultTag = 'p'
+		defaultTag = 'p',
+		muted = false
 	}: {
 		content: string;
 		editable?: boolean;
@@ -24,6 +25,7 @@
 		onAutofocused?: () => void;
 		surfaceClass?: string;
 		defaultTag?: EditorDefaultTag;
+		muted?: boolean;
 	} = $props();
 
 	let host: HTMLDivElement | undefined = $state();
@@ -106,7 +108,7 @@
 	});
 </script>
 
-<div bind:this={host} class="task-editor-host"></div>
+<div bind:this={host} class={['task-editor-host', muted && 'is-muted']}></div>
 
 <style>
 	.task-editor-host {
@@ -131,6 +133,95 @@
 
 	.task-editor-host :global(.task-editor-surface p + p) {
 		margin-top: 0.25rem;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul),
+	.task-editor-host :global(.task-editor-surface ol) {
+		margin: 0.25rem 0 0;
+		padding-left: 1.25rem;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul) {
+		list-style: disc;
+	}
+
+	.task-editor-host :global(.task-editor-surface ol) {
+		list-style: decimal;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul ul),
+	.task-editor-host :global(.task-editor-surface ol ul) {
+		list-style: circle;
+	}
+
+	.task-editor-host :global(.task-editor-surface li) {
+		margin: 0.15rem 0;
+		padding-left: 0.1rem;
+	}
+
+	.task-editor-host :global(.task-editor-surface li p) {
+		margin: 0;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList']) {
+		list-style: none;
+		padding-left: 0;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li) {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		column-gap: 0.45rem;
+		padding-left: 0;
+		white-space: normal;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li > label) {
+		display: inline-flex;
+		align-items: center;
+		margin-top: 0.26rem;
+		user-select: none;
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li input) {
+		width: 0.9rem;
+		height: 0.9rem;
+		accent-color: var(--color-primary);
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li input:checked) {
+		accent-color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+	}
+
+	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li > div) {
+		min-width: 0;
+		white-space: pre-wrap;
+	}
+
+	.task-editor-host
+		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div),
+	.task-editor-host
+		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div *) {
+		color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+		text-decoration: line-through;
+	}
+
+	.task-editor-host.is-muted :global(.task-editor-surface) {
+		text-decoration: line-through;
+	}
+
+	.task-editor-host.is-muted :global(.task-editor-surface a) {
+		color: inherit;
+		text-decoration: line-through;
+		text-decoration-color: currentColor;
+	}
+
+	.task-editor-host.is-muted
+		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div),
+	.task-editor-host.is-muted
+		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div *) {
+		color: inherit;
 	}
 
 	.task-editor-host :global(.task-editor-surface h1),

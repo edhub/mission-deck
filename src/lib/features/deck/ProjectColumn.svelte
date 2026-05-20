@@ -79,7 +79,7 @@
 	</header>
 
 	<div class="[scrollbar-width:thin] overflow-y-auto pt-4 pb-3">
-		<div class="grid min-h-1 gap-5">
+		<div class="grid min-h-1 gap-6">
 			{#each activeTasks as task (task.id)}
 				<TaskItem
 					{task}

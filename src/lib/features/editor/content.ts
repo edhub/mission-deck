@@ -19,4 +19,3 @@ export function isEmptyHtml(html: string): boolean {
 			.replace(/[\s\u00a0]/g, '').length === 0
 	);
 }
-

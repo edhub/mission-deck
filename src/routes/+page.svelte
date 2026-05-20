@@ -25,20 +25,26 @@
 			class="relative z-10 flex h-full [scrollbar-width:thin] gap-8 overflow-x-auto overflow-y-hidden px-5 pt-4 pb-5"
 			aria-label="Mission deck projects"
 		>
-			{#each deck.activeProjects as project (project.id)}
-				<ProjectColumn
-					{project}
-					activeTasks={deck.activeTasksForProject(project.id)}
-					archivedTasks={deck.archivedTasksForProject(project.id)}
-					onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
-					onArchiveProject={(projectId) => deck.archiveProject(projectId)}
-					onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
-					onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
-					onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
-					onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
-					onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
-					onDelete={(taskId) => deck.deleteTask(taskId)}
-				/>
+			{#each deck.activeProjects as project, index (project.id)}
+				<div class="relative max-h-full shrink-0">
+					{#if index > 0}
+						<div class="absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"></div>
+					{/if}
+
+					<ProjectColumn
+						{project}
+						activeTasks={deck.activeTasksForProject(project.id)}
+						archivedTasks={deck.archivedTasksForProject(project.id)}
+						onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
+						onArchiveProject={(projectId) => deck.archiveProject(projectId)}
+						onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
+						onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
+						onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
+						onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
+						onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
+						onDelete={(taskId) => deck.deleteTask(taskId)}
+					/>
+				</div>
 			{/each}
 
 			<section class="grid max-h-full w-80 shrink-0 place-items-center px-0.5 pt-10 pb-3">
