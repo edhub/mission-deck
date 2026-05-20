@@ -40,6 +40,7 @@
 		onDelete(task.id);
 		closeTaskMenu();
 	}
+
 </script>
 
 <div
@@ -62,7 +63,7 @@
 			/>
 		</div>
 
-		<div class="dropdown dropdown-end -mt-0.5 shrink-0" bind:this={taskActionsEl}>
+		<div class="dropdown dropdown-end shrink-0" bind:this={taskActionsEl}>
 			<button
 				class="btn btn-ghost btn-xs btn-circle text-base-content/40 opacity-0 transition group-focus-within/task:opacity-100 group-hover/task:opacity-100 focus-visible:opacity-100"
 				aria-label="Task actions"

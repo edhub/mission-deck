@@ -51,10 +51,6 @@
 			element,
 			editable,
 			extensions: taskExtensions({
-				onEnter: () => {
-					instance.commands.blur();
-					return true;
-				},
 				onEscape: () => {
 					cancel();
 					return true;
@@ -114,11 +110,13 @@
 	}
 
 	.task-editor-host :global(.task-editor-surface) {
+		box-sizing: border-box;
 		min-width: 0;
 		outline: none;
 		color: inherit;
 		font-size: 0.88rem;
 		line-height: 1.4;
+		padding-block: 0.125rem;
 		white-space: pre-wrap;
 		word-break: break-word;
 	}
