@@ -16,43 +16,45 @@
 </svelte:head>
 
 <div
-	class="relative grid h-screen grid-rows-[auto_1fr] overflow-hidden bg-linear-to-b from-[#fbfbfd] to-[#f1f1f3] before:pointer-events-none before:absolute before:top-0 before:left-0 before:size-[32rem] before:bg-radial-[at_top_left] before:from-white/90 before:to-transparent"
+	class="relative isolate grid h-screen grid-rows-[auto_1fr] overflow-hidden bg-linear-to-b from-base-100 to-base-300"
 >
 	<header
-		class="z-10 flex items-center justify-between gap-4 border-b border-black/8 bg-white/68 px-5 pt-3.5 pb-3 backdrop-blur-2xl"
+		class="navbar relative z-10 border-b border-base-content/8 bg-base-100/68 backdrop-blur-2xl"
 	>
-		<div>
-			<p class="mb-0.5 text-[0.72rem] font-semibold tracking-[0.05em] text-[#8a8a91] uppercase">
-				Local deck
-			</p>
-			<h1 class="m-0 text-[1.15rem] font-semibold tracking-[-0.02em]">Mission Deck</h1>
+		<div class="navbar-start">
+			<div>
+				<p class="mb-0.5 text-xs font-semibold tracking-wider text-base-content/50 uppercase">
+					Local deck
+				</p>
+				<h1 class="m-0 text-lg font-semibold tracking-tight">Mission Deck</h1>
+			</div>
 		</div>
 
-		<div class="flex gap-2">
+		<div class="navbar-end gap-2">
 			{#if deck.hasCompletedTasks}
 				<button
-					class="rounded-[0.55rem] border border-black/10 bg-white/75 px-3 py-1.5 text-[0.85rem] text-[#2c2c2e]"
+					class="btn btn-sm btn-ghost"
 					onclick={() => deck.archiveAllCompletedTasks()}
 				>
 					Archive done
 				</button>
 			{/if}
 			<button
-				class="rounded-[0.55rem] border border-black/10 bg-white/75 px-3 py-1.5 text-[0.85rem] text-[#2c2c2e]"
+				class="btn btn-sm btn-ghost"
 				onclick={() => deck.exportDeck()}>Export</button
 			>
 			<button
-				class="rounded-[0.55rem] border border-[#007aff] bg-[#007aff] px-3 py-1.5 text-[0.85rem] text-white"
+				class="btn btn-sm btn-primary"
 				onclick={() => deck.addProject()}>+ Project</button
 			>
 		</div>
 	</header>
 
 	{#if !deck.loaded}
-		<main class="grid place-items-center text-[#6e6e73]">Loading your deck…</main>
+		<main class="grid place-items-center text-base-content/60">Loading your deck…</main>
 	{:else}
 		<main
-			class="flex [scrollbar-width:thin] gap-[1.15rem] overflow-x-auto overflow-y-hidden px-5 pt-4 pb-5"
+			class="relative z-10 flex [scrollbar-width:thin] gap-5 overflow-x-auto overflow-y-hidden px-5 pt-4 pb-5"
 			aria-label="Mission deck projects"
 		>
 			{#each deck.activeProjects as project (project.id)}

@@ -9,18 +9,23 @@
 		editable = true,
 		onChange,
 		onFocus,
-		onBlur
+		onBlur,
+		autofocus = false,
+		onAutofocused
 	}: {
 		content: string;
 		editable?: boolean;
 		onChange?: (html: string) => void;
 		onFocus?: () => void;
 		onBlur?: () => void;
+		autofocus?: boolean;
+		onAutofocused?: () => void;
 	} = $props();
 
 	let host: HTMLDivElement | undefined = $state();
 	let editor: Editor | undefined = $state();
 	let baseline = '';
+	let didAutofocus = false;
 
 	function commit() {
 		if (!editor) return;
@@ -88,6 +93,13 @@
 		if (editor.isEditable !== editable) editor.setEditable(editable);
 	});
 
+	$effect(() => {
+		if (!editor || !autofocus || didAutofocus) return;
+		didAutofocus = true;
+		queueMicrotask(() => editor?.commands.focus('end'));
+		onAutofocused?.();
+	});
+
 	onDestroy(() => {
 		editor?.destroy();
 		editor = undefined;
@@ -129,7 +141,8 @@
 	}
 
 	.task-editor-host :global(.task-editor-surface a) {
-		color: #007aff;
+		color: var(--color-primary);
 		text-decoration: underline;
+		text-decoration-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
 	}
 </style>

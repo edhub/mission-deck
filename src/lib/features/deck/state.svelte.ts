@@ -186,10 +186,8 @@ class DeckState {
 		await saveProject(projectSnapshot(project));
 	}
 
-	async addTask(projectId: string, group: TaskGroup, content: string) {
+	async addTask(projectId: string, group: TaskGroup, content = '') {
 		const trimmed = content.trim();
-		if (!trimmed) return;
-
 		const timestamp = now();
 		const siblings = this.tasks.filter((task) => task.projectId === projectId && !task.archived);
 		const task: Task = {
@@ -207,6 +205,7 @@ class DeckState {
 
 		this.tasks = [...this.tasks, task];
 		await saveTask(taskSnapshot(task));
+		return task.id;
 	}
 
 	async updateTaskContent(taskId: string, content: string) {
