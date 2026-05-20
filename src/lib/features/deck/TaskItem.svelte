@@ -40,7 +40,6 @@
 		onDelete(task.id);
 		closeTaskMenu();
 	}
-
 </script>
 
 <div
@@ -52,43 +51,42 @@
 			'[&_.task-editor-surface]:text-base-content/50 [&_.task-editor-surface]:line-through'
 	]}
 >
-	<div class="flex items-start gap-1">
-		<div class="min-w-0 flex-1">
-			<TaskEditor
-				content={task.content}
-				editable={!task.completed}
-				{autofocus}
-				{onAutofocused}
-				onChange={(html) => onUpdateContent(task.id, html)}
-			/>
-		</div>
+	<div class="min-w-0">
+		<TaskEditor
+			content={task.content}
+			defaultTag="h3"
+			editable={!task.completed}
+			{autofocus}
+			{onAutofocused}
+			onChange={(html) => onUpdateContent(task.id, html)}
+		/>
+	</div>
 
-		<div class="dropdown dropdown-end shrink-0" bind:this={taskActionsEl}>
-			<button
-				class="btn btn-ghost btn-xs btn-circle text-base-content/40 opacity-0 transition group-focus-within/task:opacity-100 group-hover/task:opacity-100 focus-visible:opacity-100"
-				aria-label="Task actions"
-			>
-				⋯
-			</button>
+	<div class="dropdown dropdown-end absolute right-2 top-2 z-2" bind:this={taskActionsEl}>
+		<button
+			class="btn btn-ghost btn-xs btn-circle text-base-content/40 opacity-0 transition group-focus-within/task:opacity-100 group-hover/task:opacity-100 focus-visible:opacity-100"
+			aria-label="Task actions"
+		>
+			⋯
+		</button>
 
-			<ul
-				tabindex="-1"
-				class="dropdown-content menu menu-sm bg-base-100/96 rounded-box z-3 w-40 p-1 shadow-lg border border-black/10 backdrop-blur-lg"
-			>
-				<li>
-					<button onclick={toggleCompleted}
-						>{task.completed ? 'Mark incomplete' : 'Mark complete'}</button
-					>
-				</li>
-				<li>
-					<button class={task.focused ? 'text-warning' : ''} onclick={toggleFocus}>
-						{task.focused ? 'Remove focus' : 'Mark focus'}
-					</button>
-				</li>
-				<li>
-					<button class="hover:text-error" onclick={deleteTask}>Delete task</button>
-				</li>
-			</ul>
-		</div>
+		<ul
+			tabindex="-1"
+			class="dropdown-content menu menu-sm bg-base-100/96 rounded-box z-3 w-40 p-1 shadow-lg border border-black/10 backdrop-blur-lg"
+		>
+			<li>
+				<button onclick={toggleCompleted}
+					>{task.completed ? 'Mark incomplete' : 'Mark complete'}</button
+				>
+			</li>
+			<li>
+				<button class={task.focused ? 'text-warning' : ''} onclick={toggleFocus}>
+					{task.focused ? 'Remove focus' : 'Mark focus'}
+				</button>
+			</li>
+			<li>
+				<button class="hover:text-error" onclick={deleteTask}>Delete task</button>
+			</li>
+		</ul>
 	</div>
 </div>

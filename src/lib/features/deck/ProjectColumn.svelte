@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { TaskEditor } from '$lib/features/editor';
 	import TaskItem from './TaskItem.svelte';
 	import type { Project, Task, TaskGroup } from './types';
 
@@ -28,67 +29,42 @@
 		onDelete: (taskId: string) => void;
 	} = $props();
 
-	let editingName = $state(false);
-	let nameDraft = $state('');
 	let autofocusTaskId = $state<string | undefined>();
-
-	$effect(() => {
-		if (!editingName) nameDraft = project.name;
-	});
-
-	function saveName() {
-		onRenameProject(project.id, nameDraft);
-		editingName = false;
-	}
-
-	function cancelName() {
-		nameDraft = project.name;
-		editingName = false;
-	}
-
-	function onNameKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter') saveName();
-		if (event.key === 'Escape') cancelName();
-	}
 
 	async function addTask() {
 		autofocusTaskId = await onAddTask(project.id, 'other', '');
 	}
 </script>
 
-<article class="group grid max-h-full w-80 shrink-0 grid-rows-[auto_1fr] overflow-hidden">
-	<header class="flex items-center justify-between gap-2 px-0.5 pt-1.5 pb-2.5">
-		<div class="flex min-w-0 items-center gap-1.5">
-			{#if editingName}
-				<input
-					class="input input-sm input-bordered w-full min-w-0 font-semibold"
-					bind:value={nameDraft}
-					onkeydown={onNameKeydown}
-					onblur={saveName}
-				/>
-			{:else}
-				<button
-					class="btn btn-ghost btn-sm min-w-0 text-base font-semibold tracking-tight"
-					onclick={() => (editingName = true)}>{project.name}</button
-				>
-			{/if}
-
-			<button
-				class="btn btn-ghost btn-xs btn-circle text-base-content/50 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
-				aria-label="Add task"
-				onclick={addTask}>+</button
-			>
+<article class="group relative grid max-h-full w-80 shrink-0 grid-rows-[auto_1fr] overflow-hidden">
+	<header class="px-0.5 pt-1.5 pb-2.5">
+		<div class="min-w-0">
+			<TaskEditor
+				content={project.name}
+				defaultTag="h1"
+				surfaceClass="project-title-editor"
+				onChange={(html) => onRenameProject(project.id, html)}
+			/>
 		</div>
 
-		<div class="dropdown dropdown-end">
+		<button
+			class="btn absolute top-1.5 right-7 btn-circle text-base-content/50 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100"
+			aria-label="Add task"
+			onclick={addTask}>+</button
+		>
+
+		<div class="dropdown absolute dropdown-end top-1.5 right-0">
 			<button
-				class="btn btn-ghost btn-xs btn-circle text-base-content/50 opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"
+				class="btn btn-circle text-base-content/50 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100"
 				aria-label="Project menu"
 			>
 				⌘
 			</button>
 
-			<ul tabindex="-1" class="dropdown-content menu menu-sm bg-base-100 rounded-box z-10 w-36 p-1 shadow-lg border border-black/10 backdrop-blur-lg">
+			<ul
+				tabindex="-1"
+				class="dropdown-content menu z-10 w-36 menu-sm rounded-box border border-black/10 bg-base-100 p-1 shadow-lg backdrop-blur-lg"
+			>
 				<li>
 					<button
 						onclick={() => {
@@ -103,7 +79,7 @@
 	</header>
 
 	<div class="[scrollbar-width:thin] overflow-y-auto pt-4 pb-3">
-		<div class="grid min-h-1 gap-3">
+		<div class="grid min-h-1 gap-5">
 			{#each activeTasks as task (task.id)}
 				<TaskItem
 					{task}
@@ -119,7 +95,7 @@
 
 		<section class="mt-4">
 			<button
-				class="btn btn-ghost btn-xs btn-block justify-start gap-1.5 font-semibold text-base-content/40"
+				class="btn btn-block justify-start gap-1.5 font-semibold text-base-content/40 btn-ghost btn-xs"
 				onclick={() => onToggleCompletedExpanded(project.id)}
 			>
 				<span>{project.completedExpanded ? '⌄' : '›'}</span>
@@ -137,3 +113,17 @@
 		</section>
 	</div>
 </article>
+
+<style>
+	:global(.project-title-editor) {
+		font-size: 1rem;
+		padding-block: 0;
+		color: color-mix(in oklch, currentColor 78%, transparent);
+	}
+
+	:global(.project-title-editor h1),
+	:global(.project-title-editor h2),
+	:global(.project-title-editor h3) {
+		color: var(--color-base-content);
+	}
+</style>

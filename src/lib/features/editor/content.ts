@@ -1,12 +1,14 @@
 const TIPTAP_HTML_HINT = /^\s*<(p|pre|ul|ol|blockquote|h[1-6]|hr|br)(\s|>|\/)/i;
 
-export function normalizeContent(value: string): string {
-	if (!value) return '';
+export type EditorDefaultTag = 'p' | 'h1' | 'h2' | 'h3';
+
+export function normalizeContent(value: string, defaultTag: EditorDefaultTag = 'p'): string {
 	if (TIPTAP_HTML_HINT.test(value)) return value;
+	if (!value) return defaultTag === 'p' ? '' : `<${defaultTag}></${defaultTag}>`;
 
 	const escaped = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-	return `<p>${escaped.replace(/\n/g, '<br>')}</p>`;
+	return `<${defaultTag}>${escaped.replace(/\n/g, '<br>')}</${defaultTag}>`;
 }
 
 export function isEmptyHtml(html: string): boolean {
@@ -17,3 +19,4 @@ export function isEmptyHtml(html: string): boolean {
 			.replace(/[\s\u00a0]/g, '').length === 0
 	);
 }
+

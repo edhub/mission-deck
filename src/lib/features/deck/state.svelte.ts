@@ -187,13 +187,13 @@ class DeckState {
 	}
 
 	async addTask(projectId: string, group: TaskGroup, content = '') {
-		const trimmed = content.trim();
+		const initialContent = content.trim();
 		const timestamp = now();
 		const siblings = this.tasks.filter((task) => task.projectId === projectId && !task.archived);
 		const task: Task = {
 			id: createId('task'),
 			projectId,
-			content: trimmed,
+			content: initialContent,
 			group,
 			completed: false,
 			archived: false,

@@ -2,7 +2,7 @@
 
 A local-first multi-project task deck for personal use.
 
-Mission Deck lays projects out as fixed-width columns and groups unfinished tasks by handling mode: Concern, Details, Hands-on, Delegate, and Other. Data is stored locally in IndexedDB.
+Mission Deck lays projects out as fixed-width columns and groups unfinished tasks by handling mode: Concern, Details, Hands-on, Delegate, and Other. Task content and project titles are edited inline and stored locally in IndexedDB as TipTap HTML.
 
 ## Stack
 
