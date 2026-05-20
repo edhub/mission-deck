@@ -275,6 +275,10 @@ h1 {
 	z-index: 1;
 }
 
+.task-item.menu-open {
+	z-index: 20;
+}
+
 .task-item:hover {
 	border-color: rgb(0 0 0 / 12%);
 	background: rgb(255 255 255 / 96%);
@@ -287,50 +291,76 @@ h1 {
 	box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
 }
 
-.task-actions {
+.task-item .task-editor-surface {
+	padding-right: 1.8rem;
+}
+
+.task-menu-wrap {
 	position: absolute;
-	top: -0.7rem;
+	top: 0.42rem;
 	right: 0.45rem;
-	display: flex;
-	gap: 0.3rem;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 120ms ease;
+	z-index: 2;
 }
 
-.task-item:hover .task-actions,
-.task-item:focus-within .task-actions {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.task-check,
-.task-action {
+.task-menu-button {
 	display: grid;
 	place-items: center;
-	width: 1.4rem;
-	height: 1.4rem;
-	border: 1px solid rgb(0 0 0 / 12%);
+	width: 1.35rem;
+	height: 1.35rem;
+	border: 0;
 	border-radius: 999px;
-	background: rgb(255 255 255 / 96%);
-	box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
-	color: #8a8a91;
-	font-size: 0.78rem;
+	background: rgb(255 255 255 / 74%);
+	color: #9a9aa0;
+	font-size: 0.5rem;
+	letter-spacing: -0.08em;
 	line-height: 1;
+	opacity: 0;
 	transition:
-		color 120ms ease,
 		background 120ms ease,
-		border-color 120ms ease;
+		opacity 120ms ease,
+		color 120ms ease;
 }
 
-.task-check {
-	color: #007aff;
+.task-item:hover .task-menu-button,
+.task-item:focus-within .task-menu-button,
+.task-menu-button[aria-expanded='true'] {
+	opacity: 1;
 }
 
-.completed .task-check {
-	background: #007aff;
-	border-color: #007aff;
-	color: white;
+.task-menu-button:hover,
+.task-menu-button[aria-expanded='true'] {
+	background: rgb(0 0 0 / 5%);
+	color: #6e6e73;
+}
+
+.task-menu-popover {
+	position: absolute;
+	top: calc(100% + 0.25rem);
+	right: 0;
+	z-index: 3;
+	min-width: 9rem;
+	border: 1px solid rgb(0 0 0 / 10%);
+	border-radius: 0.65rem;
+	padding: 0.25rem;
+	background: rgb(255 255 255 / 96%);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+	backdrop-filter: blur(18px);
+}
+
+.task-menu-popover button {
+	width: 100%;
+	border: 0;
+	border-radius: 0.45rem;
+	padding: 0.42rem 0.55rem;
+	background: transparent;
+	color: #1d1d1f;
+	font-size: 0.82rem;
+	text-align: left;
+}
+
+.task-menu-popover button:hover,
+.task-menu-popover button.active {
+	background: rgb(0 0 0 / 5%);
 }
 
 .new-task-input {

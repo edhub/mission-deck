@@ -16,6 +16,14 @@ function nextOrder(items: { order: number }[]) {
 	return Math.max(0, ...items.map((item) => item.order)) + ORDER_STEP;
 }
 
+function projectSnapshot(project: Project): Project {
+	return $state.snapshot(project) as Project;
+}
+
+function taskSnapshot(task: Task): Task {
+	return $state.snapshot(task) as Task;
+}
+
 function sampleDeck(): DeckSnapshot {
 	const createdAt = now();
 	const projects: Project[] = [
@@ -95,7 +103,11 @@ class DeckState {
 	}
 
 	get snapshot(): DeckSnapshot {
-		return { version: 1, projects: this.projects, tasks: this.tasks };
+		return {
+			version: 1,
+			projects: this.projects.map(projectSnapshot),
+			tasks: this.tasks.map(taskSnapshot)
+		};
 	}
 
 	async load() {
@@ -144,7 +156,7 @@ class DeckState {
 		};
 
 		this.projects = [...this.projects, project];
-		await saveProject(project);
+		await saveProject(projectSnapshot(project));
 	}
 
 	async renameProject(projectId: string, name: string) {
@@ -153,7 +165,7 @@ class DeckState {
 
 		project.name = name.trim() || 'Untitled Project';
 		project.updatedAt = now();
-		await saveProject(project);
+		await saveProject(projectSnapshot(project));
 	}
 
 	async archiveProject(projectId: string) {
@@ -162,7 +174,7 @@ class DeckState {
 
 		project.archived = true;
 		project.updatedAt = now();
-		await saveProject(project);
+		await saveProject(projectSnapshot(project));
 	}
 
 	async toggleCompletedExpanded(projectId: string) {
@@ -171,7 +183,7 @@ class DeckState {
 
 		project.completedExpanded = !project.completedExpanded;
 		project.updatedAt = now();
-		await saveProject(project);
+		await saveProject(projectSnapshot(project));
 	}
 
 	async addTask(projectId: string, group: TaskGroup, content: string) {
@@ -194,7 +206,7 @@ class DeckState {
 		};
 
 		this.tasks = [...this.tasks, task];
-		await saveTask(task);
+		await saveTask(taskSnapshot(task));
 	}
 
 	async updateTaskContent(taskId: string, content: string) {
@@ -203,7 +215,7 @@ class DeckState {
 
 		task.content = content.trim() || task.content;
 		task.updatedAt = now();
-		await saveTask(task);
+		await saveTask(taskSnapshot(task));
 	}
 
 	async toggleTaskCompleted(taskId: string) {
@@ -214,7 +226,7 @@ class DeckState {
 		task.completedAt = task.completed ? now() : undefined;
 		if (!task.completed) task.archived = false;
 		task.updatedAt = now();
-		await saveTask(task);
+		await saveTask(taskSnapshot(task));
 	}
 
 	async archiveAllCompletedTasks() {
@@ -226,7 +238,7 @@ class DeckState {
 			task.updatedAt = timestamp;
 		}
 
-		await Promise.all(tasks.map(saveTask));
+		await Promise.all(tasks.map((task) => saveTask(taskSnapshot(task))));
 	}
 
 	async toggleTaskFocus(taskId: string) {
@@ -235,7 +247,7 @@ class DeckState {
 
 		task.focused = !task.focused;
 		task.updatedAt = now();
-		await saveTask(task);
+		await saveTask(taskSnapshot(task));
 	}
 
 	async deleteTask(taskId: string) {
