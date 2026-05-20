@@ -17,3 +17,6 @@ format:
 
 build:
 	bun run build
+
+deploy: build
+	rsync -avz --delete build/ ali44:/var/www/deck.tyun.fun/
