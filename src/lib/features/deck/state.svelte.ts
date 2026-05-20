@@ -224,8 +224,9 @@ class DeckState {
 		for (const task of tasks) {
 			task.archived = true;
 			task.updatedAt = timestamp;
-			await saveTask(task);
 		}
+
+		await Promise.all(tasks.map(saveTask));
 	}
 
 	async toggleTaskFocus(taskId: string) {
