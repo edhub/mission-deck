@@ -18,6 +18,7 @@ export interface Task {
 	content: string;
 	group: TaskGroup;
 	completed: boolean;
+	archived: boolean;
 	focused: boolean;
 	order: number;
 	createdAt: string;

@@ -2,17 +2,9 @@
 	import { onMount } from 'svelte';
 	import ProjectColumn from '$lib/features/deck/ProjectColumn.svelte';
 	import { deck } from '$lib/features/deck/state.svelte';
-	import { TASK_GROUPS, type TaskGroup } from '$lib/features/deck/types';
-
 	onMount(() => {
 		deck.load();
 	});
-
-	function tasksByGroup(projectId: string) {
-		return Object.fromEntries(
-			TASK_GROUPS.map((group) => [group, deck.tasksForGroup(projectId, group)])
-		) as Record<TaskGroup, ReturnType<typeof deck.tasksForGroup>>;
-	}
 </script>
 
 <svelte:head>
@@ -43,11 +35,13 @@
 			{#each deck.activeProjects as project (project.id)}
 				<ProjectColumn
 					{project}
-					tasksByGroup={tasksByGroup(project.id)}
-					completedTasks={deck.completedTasksForProject(project.id)}
+					activeTasks={deck.activeTasksForProject(project.id)}
+					archivedTasks={deck.archivedTasksForProject(project.id)}
+					completedCount={deck.completedTasksForProject(project.id).length}
 					onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
 					onArchiveProject={(projectId) => deck.archiveProject(projectId)}
 					onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
+					onArchiveCompleted={(projectId) => deck.archiveCompletedTasks(projectId)}
 					onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
 					onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
 					onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}

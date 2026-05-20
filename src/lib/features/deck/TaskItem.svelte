@@ -15,37 +15,25 @@
 		onDelete: (taskId: string) => void;
 	} = $props();
 
-	let editing = $state(false);
-	let draft = $state('');
-
-	$effect(() => {
-		if (!editing) draft = task.content;
-	});
-
-	function startEditing() {
-		draft = task.content;
-		editing = true;
-	}
+	let draft = $derived(task.content);
 
 	function save() {
-		onUpdateContent(task.id, draft);
-		editing = false;
-	}
-
-	function cancel() {
-		draft = task.content;
-		editing = false;
+		const content = draft.trim();
+		if (content && content !== task.content) onUpdateContent(task.id, content);
+		if (!content) draft = task.content;
 	}
 
 	function onKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			save();
+			(event.currentTarget as HTMLTextAreaElement).blur();
 		}
 
 		if (event.key === 'Escape') {
 			event.preventDefault();
-			cancel();
+			draft = task.content;
+			(event.currentTarget as HTMLTextAreaElement).blur();
 		}
 	}
 </script>
@@ -59,13 +47,13 @@
 		{task.completed ? '✓' : ''}
 	</button>
 
-	{#if editing}
-		<textarea class="task-editor" bind:value={draft} onkeydown={onKeydown} onblur={save}></textarea>
-	{:else}
-		<button class="task-content" onclick={startEditing}>
-			{task.content}
-		</button>
-	{/if}
+	<textarea
+		class="task-editor inline-task-editor"
+		aria-label="Task content"
+		bind:value={draft}
+		onkeydown={onKeydown}
+		onblur={save}
+	></textarea>
 
 	<button
 		class="task-action focus-action"

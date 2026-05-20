@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { deleteTask, loadDeck, replaceDeck, saveProject, saveTask } from './db';
-import { TASK_GROUPS, type DeckSnapshot, type Project, type Task, type TaskGroup } from './types';
+import type { DeckSnapshot, Project, Task, TaskGroup } from './types';
 
 const ORDER_STEP = 1024;
 
@@ -46,6 +46,7 @@ function sampleDeck(): DeckSnapshot {
 			content: 'Shape the first usable deck layout',
 			group: 'hands-on',
 			completed: false,
+			archived: false,
 			focused: true,
 			order: ORDER_STEP,
 			createdAt,
@@ -57,6 +58,7 @@ function sampleDeck(): DeckSnapshot {
 			content: 'Keep the task model intentionally small',
 			group: 'concern',
 			completed: false,
+			archived: false,
 			focused: false,
 			order: ORDER_STEP,
 			createdAt,
@@ -68,6 +70,7 @@ function sampleDeck(): DeckSnapshot {
 			content: 'Collect loose errands without making them heavy',
 			group: 'other',
 			completed: false,
+			archived: false,
 			focused: false,
 			order: ORDER_STEP,
 			createdAt,
@@ -114,16 +117,18 @@ class DeckState {
 			.sort((a, b) => a.order - b.order);
 	}
 
-	tasksForGroup(projectId: string, group: TaskGroup) {
-		return this.tasksForProject(projectId).filter(
-			(task) => !task.completed && task.group === group
-		);
+	activeTasksForProject(projectId: string) {
+		return this.tasksForProject(projectId).filter((task) => !task.archived);
+	}
+
+	archivedTasksForProject(projectId: string) {
+		return this.tasksForProject(projectId)
+			.filter((task) => task.archived)
+			.sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
 	}
 
 	completedTasksForProject(projectId: string) {
-		return this.tasksForProject(projectId)
-			.filter((task) => task.completed)
-			.sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
+		return this.tasksForProject(projectId).filter((task) => task.completed && !task.archived);
 	}
 
 	async addProject() {
@@ -174,15 +179,14 @@ class DeckState {
 		if (!trimmed) return;
 
 		const timestamp = now();
-		const siblings = this.tasks.filter(
-			(task) => task.projectId === projectId && task.group === group && !task.completed
-		);
+		const siblings = this.tasks.filter((task) => task.projectId === projectId && !task.archived);
 		const task: Task = {
 			id: createId('task'),
 			projectId,
 			content: trimmed,
 			group,
 			completed: false,
+			archived: false,
 			focused: false,
 			order: nextOrder(siblings),
 			createdAt: timestamp,
@@ -208,8 +212,20 @@ class DeckState {
 
 		task.completed = !task.completed;
 		task.completedAt = task.completed ? now() : undefined;
+		if (!task.completed) task.archived = false;
 		task.updatedAt = now();
 		await saveTask(task);
+	}
+
+	async archiveCompletedTasks(projectId: string) {
+		const timestamp = now();
+		const tasks = this.completedTasksForProject(projectId);
+
+		for (const task of tasks) {
+			task.archived = true;
+			task.updatedAt = timestamp;
+			await saveTask(task);
+		}
 	}
 
 	async toggleTaskFocus(taskId: string) {
@@ -234,10 +250,6 @@ class DeckState {
 		anchor.download = `mission-deck-${new Date().toISOString().slice(0, 10)}.json`;
 		anchor.click();
 		URL.revokeObjectURL(url);
-	}
-
-	groups() {
-		return TASK_GROUPS;
 	}
 }
 
