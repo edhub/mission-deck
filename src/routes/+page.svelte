@@ -7,6 +7,7 @@
 
 	let sidebarOpen = $state(false);
 	let dragItems = $state<Project[] | null>(null);
+	let importInput = $state<HTMLInputElement>();
 	const items = $derived(dragItems ?? deck.activeProjects);
 
 	function handleConsider(event: CustomEvent<DndEvent<Project>>) {
@@ -16,6 +17,23 @@
 	function handleFinalize(event: CustomEvent<DndEvent<Project>>) {
 		deck.reorderProjects(event.detail.items.map((project) => project.id));
 		dragItems = null;
+	}
+
+	async function handleImport(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file) return;
+
+		const confirmed = confirm('Import will completely replace your current deck. Continue?');
+		if (!confirmed) return;
+
+		try {
+			await deck.importDeck(JSON.parse(await file.text()));
+			sidebarOpen = false;
+		} catch (error) {
+			alert(error instanceof Error ? error.message : 'Import failed.');
+		}
 	}
 
 	onMount(() => {
@@ -67,11 +85,11 @@
 							onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
 							onArchiveProject={(projectId) => deck.archiveProject(projectId)}
 							onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
-							onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
+							onAddTask={(projectId, tag, content) => deck.addTask(projectId, tag, content)}
 							onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
 							onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
 							onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
-							onSetGroup={(taskId, group) => deck.setTaskGroup(taskId, group)}
+							onSetTag={(taskId, tag) => deck.setTaskTag(taskId, tag)}
 							onDelete={(taskId) => deck.deleteTask(taskId)}
 						/>
 					</div>
@@ -131,6 +149,16 @@
 			<button class="btn justify-start btn-ghost btn-sm" onclick={() => deck.exportDeck()}>
 				Export
 			</button>
+			<button class="btn justify-start btn-ghost btn-sm" onclick={() => importInput?.click()}>
+				Import
+			</button>
+			<input
+				bind:this={importInput}
+				class="hidden"
+				type="file"
+				accept="application/json,.json"
+				onchange={handleImport}
+			/>
 			{#if deck.hasCompletedTasks}
 				<button
 					class="btn justify-start btn-ghost btn-sm"

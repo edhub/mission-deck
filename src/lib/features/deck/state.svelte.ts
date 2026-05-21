@@ -1,6 +1,13 @@
 import { browser } from '$app/environment';
+import { sanitizeTiptapHtml } from '$lib/features/editor/content';
 import { deleteTask, loadDeck, replaceDeck, saveProject, saveTask } from './db';
-import type { DeckSnapshot, Project, Task, TaskGroup } from './types';
+import {
+	normalizeTaskTag,
+	type DeckSnapshot,
+	type Project,
+	type Task,
+	type TaskTag
+} from './types';
 
 const ORDER_STEP = 1024;
 
@@ -22,6 +29,111 @@ function projectSnapshot(project: Project): Project {
 
 function taskSnapshot(task: Task): Task {
 	return $state.snapshot(task) as Task;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function isString(value: unknown): value is string {
+	return typeof value === 'string';
+}
+
+function isBoolean(value: unknown): value is boolean {
+	return typeof value === 'boolean';
+}
+
+function isNumber(value: unknown): value is number {
+	return typeof value === 'number' && Number.isFinite(value);
+}
+
+function requireString(value: Record<string, unknown>, key: string) {
+	const field = value[key];
+	if (!isString(field)) throw new Error(`Invalid import: ${key} must be a string.`);
+	return field;
+}
+
+function requireBoolean(value: Record<string, unknown>, key: string) {
+	const field = value[key];
+	if (!isBoolean(field)) throw new Error(`Invalid import: ${key} must be a boolean.`);
+	return field;
+}
+
+function requireNumber(value: Record<string, unknown>, key: string) {
+	const field = value[key];
+	if (!isNumber(field)) throw new Error(`Invalid import: ${key} must be a number.`);
+	return field;
+}
+
+function parseDeckSnapshot(value: unknown): DeckSnapshot {
+	if (!isRecord(value)) throw new Error('Invalid import: deck file must be a JSON object.');
+	if (value.version !== 1) {
+		throw new Error(`Invalid import: unsupported deck version ${JSON.stringify(value.version)}.`);
+	}
+	if (!Array.isArray(value.projects) || !Array.isArray(value.tasks)) {
+		throw new Error('Invalid import: projects and tasks are required.');
+	}
+
+	const projects: Project[] = value.projects.map((item) => {
+		if (!isRecord(item)) throw new Error('Invalid import: project must be an object.');
+		return {
+			id: requireString(item, 'id'),
+			name: sanitizeTiptapHtml(requireString(item, 'name')),
+			order: requireNumber(item, 'order'),
+			archived: requireBoolean(item, 'archived'),
+			completedExpanded: requireBoolean(item, 'completedExpanded'),
+			createdAt: requireString(item, 'createdAt'),
+			updatedAt: requireString(item, 'updatedAt')
+		};
+	});
+
+	const projectIds = new Set<string>();
+	for (const project of projects) {
+		if (projectIds.has(project.id))
+			throw new Error(`Invalid import: duplicate project id ${project.id}.`);
+		projectIds.add(project.id);
+	}
+
+	const taskIds = new Set<string>();
+	const tasks: Task[] = value.tasks.map((item) => {
+		if (!isRecord(item)) throw new Error('Invalid import: task must be an object.');
+		const rawTag = 'tag' in item ? item.tag : item.group;
+		const tag = normalizeTaskTag(rawTag);
+		if (tag === undefined) throw new Error('Invalid import: task tag is invalid.');
+
+		const projectId = requireString(item, 'projectId');
+		if (!projectIds.has(projectId))
+			throw new Error('Invalid import: task points to a missing project.');
+
+		const id = requireString(item, 'id');
+		if (taskIds.has(id)) throw new Error(`Invalid import: duplicate task id ${id}.`);
+		taskIds.add(id);
+
+		const completedAt = item.completedAt;
+		if (completedAt !== undefined && !isString(completedAt)) {
+			throw new Error('Invalid import: completedAt must be a string.');
+		}
+
+		return {
+			id,
+			projectId,
+			content: sanitizeTiptapHtml(requireString(item, 'content')),
+			tag,
+			completed: requireBoolean(item, 'completed'),
+			archived: requireBoolean(item, 'archived'),
+			focused: requireBoolean(item, 'focused'),
+			order: requireNumber(item, 'order'),
+			createdAt: requireString(item, 'createdAt'),
+			updatedAt: requireString(item, 'updatedAt'),
+			completedAt
+		};
+	});
+
+	return {
+		version: 1,
+		projects: projects.sort((a, b) => a.order - b.order),
+		tasks: tasks.sort((a, b) => a.order - b.order)
+	};
 }
 
 function sampleDeck(): DeckSnapshot {
@@ -52,7 +164,7 @@ function sampleDeck(): DeckSnapshot {
 			id: createId('task'),
 			projectId: projects[0].id,
 			content: 'Shape the first usable deck layout',
-			group: 'hands-on',
+			tag: 'hands-on',
 			completed: false,
 			archived: false,
 			focused: true,
@@ -64,7 +176,7 @@ function sampleDeck(): DeckSnapshot {
 			id: createId('task'),
 			projectId: projects[0].id,
 			content: 'Keep the task model intentionally small',
-			group: 'concern',
+			tag: 'concern',
 			completed: false,
 			archived: false,
 			focused: false,
@@ -76,7 +188,7 @@ function sampleDeck(): DeckSnapshot {
 			id: createId('task'),
 			projectId: projects[1].id,
 			content: 'Collect loose errands without making them heavy',
-			group: 'other',
+			tag: null,
 			completed: false,
 			archived: false,
 			focused: false,
@@ -201,7 +313,7 @@ class DeckState {
 		await saveProject(projectSnapshot(project));
 	}
 
-	async addTask(projectId: string, group: TaskGroup, content = '') {
+	async addTask(projectId: string, tag: TaskTag | null, content = '') {
 		const initialContent = content;
 		const timestamp = now();
 		const siblings = this.tasks.filter((task) => task.projectId === projectId && !task.archived);
@@ -209,7 +321,7 @@ class DeckState {
 			id: createId('task'),
 			projectId,
 			content: initialContent,
-			group,
+			tag,
 			completed: false,
 			archived: false,
 			focused: false,
@@ -232,11 +344,11 @@ class DeckState {
 		await saveTask(taskSnapshot(task));
 	}
 
-	async setTaskGroup(taskId: string, group: TaskGroup) {
+	async setTaskTag(taskId: string, tag: TaskTag | null) {
 		const task = this.tasks.find((item) => item.id === taskId);
-		if (!task || task.group === group) return;
+		if (!task || task.tag === tag) return;
 
-		task.group = group;
+		task.tag = tag;
 		task.updatedAt = now();
 		await saveTask(taskSnapshot(task));
 	}
@@ -276,6 +388,13 @@ class DeckState {
 	async deleteTask(taskId: string) {
 		this.tasks = this.tasks.filter((task) => task.id !== taskId);
 		await deleteTask(taskId);
+	}
+
+	async importDeck(value: unknown) {
+		const snapshot = parseDeckSnapshot(value);
+		await replaceDeck(snapshot);
+		this.projects = snapshot.projects;
+		this.tasks = snapshot.tasks;
 	}
 
 	async exportDeck() {

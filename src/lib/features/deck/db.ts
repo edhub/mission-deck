@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { DeckSnapshot, Project, Task } from './types';
+import { sanitizeTiptapHtml } from '$lib/features/editor/content';
+import { normalizeTaskTag, type DeckSnapshot, type Project, type Task } from './types';
 
 const DB_NAME = 'mission-deck';
 const DB_VERSION = 1;
@@ -23,6 +24,26 @@ interface MissionDeckDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<MissionDeckDB>> | undefined;
+
+type PersistedTask = Omit<Task, 'tag'> & { group?: unknown; tag?: unknown };
+
+function normalizePersistedTask(task: PersistedTask): Task {
+	const rawTag = 'tag' in task ? task.tag : task.group;
+	const tag = normalizeTaskTag(rawTag) ?? null;
+	return {
+		id: task.id,
+		projectId: task.projectId,
+		content: sanitizeTiptapHtml(task.content),
+		tag,
+		completed: task.completed,
+		archived: task.archived,
+		focused: task.focused,
+		order: task.order,
+		createdAt: task.createdAt,
+		updatedAt: task.updatedAt,
+		completedAt: task.completedAt
+	};
+}
 
 function getDb() {
 	if (!browser) throw new Error('IndexedDB is only available in the browser.');
@@ -56,7 +77,7 @@ export async function loadDeck(): Promise<DeckSnapshot> {
 	return {
 		version: 1,
 		projects: projects.sort((a, b) => a.order - b.order),
-		tasks: tasks.sort((a, b) => a.order - b.order)
+		tasks: tasks.map(normalizePersistedTask).sort((a, b) => a.order - b.order)
 	};
 }
 

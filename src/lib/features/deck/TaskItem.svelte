@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { TaskEditor } from '$lib/features/editor';
-	import { TASK_GROUP_LABELS, TASK_GROUPS, type Task, type TaskGroup } from './types';
+	import { sanitizeTiptapHtml } from '$lib/features/editor/content';
+	import { TASK_TAG_ACCENTS, TASK_TAG_LABELS, TASK_TAGS, type Task, type TaskTag } from './types';
 
 	let {
 		task,
 		onToggleCompleted,
 		onToggleFocus,
 		onUpdateContent,
-		onSetGroup,
+		onSetTag,
 		onDelete,
 		autofocus = false,
 		onAutofocused,
@@ -17,7 +18,7 @@
 		onToggleCompleted: (taskId: string) => void;
 		onToggleFocus: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
-		onSetGroup: (taskId: string, group: TaskGroup) => void;
+		onSetTag: (taskId: string, tag: TaskTag | null) => void;
 		onDelete: (taskId: string) => void;
 		autofocus?: boolean;
 		onAutofocused?: () => void;
@@ -26,6 +27,7 @@
 
 	let editorFocused = $state(false);
 	let actionsOpen = $derived(editorFocused && !readOnly);
+	let sanitizedContent = $derived(sanitizeTiptapHtml(task.content));
 
 	function keepEditorFocusRegion(node: HTMLElement) {
 		const keepFocus = (event: MouseEvent) => event.preventDefault();
@@ -45,8 +47,8 @@
 		onToggleFocus(task.id);
 	}
 
-	function setGroup(group: TaskGroup) {
-		onSetGroup(task.id, group);
+	function setTag(tag: TaskTag) {
+		onSetTag(task.id, task.tag === tag ? null : tag);
 	}
 
 	function deleteTask() {
@@ -83,19 +85,31 @@
 
 	<div
 		class={[
-			'group/task relative block rounded-xl border border-base-content/8 bg-base-100/90 px-3 py-2.5 shadow-sm transition focus-within:z-1 focus-within:border-primary/55 focus-within:bg-base-100 focus-within:shadow-md hover:z-1 hover:border-base-content/12 hover:bg-base-100/96 hover:shadow-md hover:focus-within:border-primary/55',
+			'group/task relative block rounded-xl border border-base-content/8 bg-base-100/90 px-3 py-2.5 shadow-sm transition focus-within:z-1 focus-within:border-base-content/12 focus-within:bg-base-100 focus-within:shadow-md hover:z-1 hover:border-base-content/12 hover:bg-base-100/96 hover:shadow-md',
 			task.focused &&
 				!task.completed &&
 				'!border-warning/35 !bg-warning/5 !shadow-[0_1px_2px_rgb(255_149_0_/_0.08)]',
 			task.completed && 'text-base-content/45'
 		]}
 	>
+		{#if task.tag}
+			<div
+				class={['absolute inset-y-2 left-0 w-0.5 rounded-full', TASK_TAG_ACCENTS[task.tag]]}
+				aria-hidden="true"
+			></div>
+
+			<div
+				class="absolute -top-2 left-3 rounded-full bg-base-100 px-1 text-[0.64rem] leading-none font-medium tracking-wide text-base-content/40 transition group-focus-within/task:text-base-content/55 group-hover/task:text-base-content/55"
+			>
+				{TASK_TAG_LABELS[task.tag]}
+			</div>
+		{/if}
+
 		<div class="min-w-0">
 			{#if readOnly}
 				<div class={['archived-task-content', task.completed && 'is-muted']}>
-					<!-- Trusted local TipTap HTML from our own IndexedDB archive; sanitize first if this ever accepts imported/untrusted content. -->
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					{@html task.content}
+					{@html sanitizedContent}
 				</div>
 			{:else}
 				<TaskEditor
@@ -140,16 +154,16 @@
 			</div>
 
 			<div class="grid gap-0.5 pt-1">
-				{#each TASK_GROUPS as group (group)}
+				{#each TASK_TAGS as tag (tag)}
 					<button
 						class={[
 							'btn h-6 min-h-6 justify-start rounded-lg px-2 text-xs font-medium whitespace-nowrap btn-ghost',
-							group === task.group && 'bg-primary/10 text-primary'
+							tag === task.tag && 'bg-primary/10 text-primary'
 						]}
 						tabindex="-1"
-						onclick={() => setGroup(group)}
+						onclick={() => setTag(tag)}
 					>
-						{TASK_GROUP_LABELS[group]}
+						{TASK_TAG_LABELS[tag]}
 					</button>
 				{/each}
 			</div>

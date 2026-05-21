@@ -9,8 +9,8 @@ Core product rules:
 - Project = fixed-width column.
 - Projects are laid out horizontally and may scroll sideways.
 - Each project column scrolls vertically.
-- Unfinished tasks are grouped by handling mode: Concern, Details, Hands-on, Delegate, Other.
-- Tasks only have content, completion state, focus flag, group, order, and timestamps.
+- Unfinished tasks are tagged by handling mode: Concern, Hands-on, Details, Verify, None.
+- Tasks only have content, completion state, focus flag, tag, order, and timestamps.
 - Data is stored locally in IndexedDB via `idb`.
 
 ## Stack
@@ -33,7 +33,7 @@ Core product rules:
 ## Conventions
 
 - Organize code by feature under `src/lib/features/`.
-- Keep UI minimal and macOS-native feeling.
+- Keep UI minimal.
 - Prefer small local data models over generic task-manager complexity.
 - Do not add backend/auth/cloud sync unless explicitly requested.
 - Do not auto-commit; provide a concise commit message when useful.

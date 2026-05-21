@@ -2,7 +2,7 @@
 	import { dragHandle } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
 	import TaskItem from './TaskItem.svelte';
-	import type { Project, Task, TaskGroup } from './types';
+	import type { Project, Task, TaskTag } from './types';
 
 	let {
 		project,
@@ -15,7 +15,7 @@
 		onToggleCompleted,
 		onToggleFocus,
 		onUpdateContent,
-		onSetGroup,
+		onSetTag,
 		onDelete
 	}: {
 		project: Project;
@@ -24,18 +24,18 @@
 		onRenameProject: (projectId: string, name: string) => void;
 		onArchiveProject: (projectId: string) => void;
 		onToggleCompletedExpanded: (projectId: string) => void;
-		onAddTask: (projectId: string, group: TaskGroup, content?: string) => Promise<string>;
+		onAddTask: (projectId: string, tag: TaskTag | null, content?: string) => Promise<string>;
 		onToggleCompleted: (taskId: string) => void;
 		onToggleFocus: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
-		onSetGroup: (taskId: string, group: TaskGroup) => void;
+		onSetTag: (taskId: string, tag: TaskTag | null) => void;
 		onDelete: (taskId: string) => void;
 	} = $props();
 
 	let autofocusTaskId = $state<string | undefined>();
 
 	async function addTask() {
-		autofocusTaskId = await onAddTask(project.id, 'other', '');
+		autofocusTaskId = await onAddTask(project.id, null, '');
 	}
 </script>
 
@@ -109,7 +109,7 @@
 					{onToggleCompleted}
 					{onToggleFocus}
 					{onUpdateContent}
-					{onSetGroup}
+					{onSetTag}
 					{onDelete}
 					autofocus={task.id === autofocusTaskId}
 					onAutofocused={() => (autofocusTaskId = undefined)}
@@ -135,7 +135,7 @@
 							{onToggleCompleted}
 							{onToggleFocus}
 							{onUpdateContent}
-							{onSetGroup}
+							{onSetTag}
 							{onDelete}
 							readOnly
 						/>
