@@ -19,7 +19,7 @@ export interface Task {
 	tag: TaskTag | null;
 	completed: boolean;
 	archived: boolean;
-	focused: boolean;
+	flagged: boolean;
 	order: number;
 	createdAt: string;
 	updatedAt: string;

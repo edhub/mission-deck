@@ -179,7 +179,7 @@ interface Task {
 	content: string;
 	group: TaskGroup;
 	completed: boolean;
-	focused: boolean;
+	flagged: boolean;
 	order: number;
 	createdAt: string;
 	updatedAt: string;

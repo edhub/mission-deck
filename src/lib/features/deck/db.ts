@@ -25,7 +25,12 @@ interface MissionDeckDB extends DBSchema {
 
 let dbPromise: Promise<IDBPDatabase<MissionDeckDB>> | undefined;
 
-type PersistedTask = Omit<Task, 'tag'> & { group?: unknown; tag?: unknown };
+type PersistedTask = Omit<Task, 'tag' | 'flagged'> & {
+	flagged?: unknown;
+	focused?: unknown;
+	group?: unknown;
+	tag?: unknown;
+};
 
 function normalizePersistedTask(task: PersistedTask): Task {
 	const rawTag = 'tag' in task ? task.tag : task.group;
@@ -37,7 +42,7 @@ function normalizePersistedTask(task: PersistedTask): Task {
 		tag,
 		completed: task.completed,
 		archived: task.archived,
-		focused: task.focused,
+		flagged: typeof task.flagged === 'boolean' ? task.flagged : task.focused === true,
 		order: task.order,
 		createdAt: task.createdAt,
 		updatedAt: task.updatedAt,

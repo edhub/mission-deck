@@ -13,7 +13,7 @@
 		onToggleCompletedExpanded,
 		onAddTask,
 		onToggleCompleted,
-		onToggleFocus,
+		onToggleFlag,
 		onUpdateContent,
 		onSetTag,
 		onDelete
@@ -26,7 +26,7 @@
 		onToggleCompletedExpanded: (projectId: string) => void;
 		onAddTask: (projectId: string, tag: TaskTag | null, content?: string) => Promise<string>;
 		onToggleCompleted: (taskId: string) => void;
-		onToggleFocus: (taskId: string) => void;
+		onToggleFlag: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
 		onSetTag: (taskId: string, tag: TaskTag | null) => void;
 		onDelete: (taskId: string) => void;
@@ -107,7 +107,7 @@
 				<TaskItem
 					{task}
 					{onToggleCompleted}
-					{onToggleFocus}
+					{onToggleFlag}
 					{onUpdateContent}
 					{onSetTag}
 					{onDelete}
@@ -133,7 +133,7 @@
 						<TaskItem
 							{task}
 							{onToggleCompleted}
-							{onToggleFocus}
+							{onToggleFlag}
 							{onUpdateContent}
 							{onSetTag}
 							{onDelete}

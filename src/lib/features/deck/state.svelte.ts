@@ -87,14 +87,14 @@ function parseDeckSnapshot(value: unknown): DeckSnapshot {
 		};
 	});
 
-	const projectIds = new Set<string>();
+	const projectIds: string[] = [];
 	for (const project of projects) {
-		if (projectIds.has(project.id))
+		if (projectIds.includes(project.id))
 			throw new Error(`Invalid import: duplicate project id ${project.id}.`);
-		projectIds.add(project.id);
+		projectIds.push(project.id);
 	}
 
-	const taskIds = new Set<string>();
+	const taskIds: string[] = [];
 	const tasks: Task[] = value.tasks.map((item) => {
 		if (!isRecord(item)) throw new Error('Invalid import: task must be an object.');
 		const rawTag = 'tag' in item ? item.tag : item.group;
@@ -102,17 +102,20 @@ function parseDeckSnapshot(value: unknown): DeckSnapshot {
 		if (tag === undefined) throw new Error('Invalid import: task tag is invalid.');
 
 		const projectId = requireString(item, 'projectId');
-		if (!projectIds.has(projectId))
+		if (!projectIds.includes(projectId))
 			throw new Error('Invalid import: task points to a missing project.');
 
 		const id = requireString(item, 'id');
-		if (taskIds.has(id)) throw new Error(`Invalid import: duplicate task id ${id}.`);
-		taskIds.add(id);
+		if (taskIds.includes(id)) throw new Error(`Invalid import: duplicate task id ${id}.`);
+		taskIds.push(id);
 
 		const completedAt = item.completedAt;
 		if (completedAt !== undefined && !isString(completedAt)) {
 			throw new Error('Invalid import: completedAt must be a string.');
 		}
+
+		const flagged =
+			'flagged' in item ? requireBoolean(item, 'flagged') : requireBoolean(item, 'focused');
 
 		return {
 			id,
@@ -121,7 +124,7 @@ function parseDeckSnapshot(value: unknown): DeckSnapshot {
 			tag,
 			completed: requireBoolean(item, 'completed'),
 			archived: requireBoolean(item, 'archived'),
-			focused: requireBoolean(item, 'focused'),
+			flagged,
 			order: requireNumber(item, 'order'),
 			createdAt: requireString(item, 'createdAt'),
 			updatedAt: requireString(item, 'updatedAt'),
@@ -167,7 +170,7 @@ function sampleDeck(): DeckSnapshot {
 			tag: 'hands-on',
 			completed: false,
 			archived: false,
-			focused: true,
+			flagged: true,
 			order: ORDER_STEP,
 			createdAt,
 			updatedAt: createdAt
@@ -179,7 +182,7 @@ function sampleDeck(): DeckSnapshot {
 			tag: 'concern',
 			completed: false,
 			archived: false,
-			focused: false,
+			flagged: false,
 			order: ORDER_STEP,
 			createdAt,
 			updatedAt: createdAt
@@ -191,7 +194,7 @@ function sampleDeck(): DeckSnapshot {
 			tag: null,
 			completed: false,
 			archived: false,
-			focused: false,
+			flagged: false,
 			order: ORDER_STEP,
 			createdAt,
 			updatedAt: createdAt
@@ -324,7 +327,7 @@ class DeckState {
 			tag,
 			completed: false,
 			archived: false,
-			focused: false,
+			flagged: false,
 			order: nextOrder(siblings),
 			createdAt: timestamp,
 			updatedAt: timestamp
@@ -376,11 +379,11 @@ class DeckState {
 		await Promise.all(tasks.map((task) => saveTask(taskSnapshot(task))));
 	}
 
-	async toggleTaskFocus(taskId: string) {
+	async toggleTaskFlag(taskId: string) {
 		const task = this.tasks.find((item) => item.id === taskId);
 		if (!task) return;
 
-		task.focused = !task.focused;
+		task.flagged = !task.flagged;
 		task.updatedAt = now();
 		await saveTask(taskSnapshot(task));
 	}

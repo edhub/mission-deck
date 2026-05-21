@@ -10,7 +10,7 @@ Core product rules:
 - Projects are laid out horizontally and may scroll sideways.
 - Each project column scrolls vertically.
 - Unfinished tasks are tagged by handling mode: Concern, Hands-on, Details, Verify, None.
-- Tasks only have content, completion state, focus flag, tag, order, and timestamps.
+- Tasks only have content, completion state, flag marker, tag, order, and timestamps.
 - Data is stored locally in IndexedDB via `idb`.
 
 ## Stack

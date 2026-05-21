@@ -87,7 +87,7 @@
 							onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
 							onAddTask={(projectId, tag, content) => deck.addTask(projectId, tag, content)}
 							onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
-							onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
+							onToggleFlag={(taskId) => deck.toggleTaskFlag(taskId)}
 							onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
 							onSetTag={(taskId, tag) => deck.setTaskTag(taskId, tag)}
 							onDelete={(taskId) => deck.deleteTask(taskId)}

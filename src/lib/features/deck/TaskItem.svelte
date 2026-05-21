@@ -6,7 +6,7 @@
 	let {
 		task,
 		onToggleCompleted,
-		onToggleFocus,
+		onToggleFlag,
 		onUpdateContent,
 		onSetTag,
 		onDelete,
@@ -16,7 +16,7 @@
 	}: {
 		task: Task;
 		onToggleCompleted: (taskId: string) => void;
-		onToggleFocus: (taskId: string) => void;
+		onToggleFlag: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
 		onSetTag: (taskId: string, tag: TaskTag | null) => void;
 		onDelete: (taskId: string) => void;
@@ -43,8 +43,8 @@
 		onToggleCompleted(task.id);
 	}
 
-	function toggleFocus() {
-		onToggleFocus(task.id);
+	function toggleFlag() {
+		onToggleFlag(task.id);
 	}
 
 	function setTag(tag: TaskTag) {
@@ -86,12 +86,13 @@
 	<div
 		class={[
 			'group/task relative block rounded-xl border border-base-content/8 bg-base-100/90 px-3 py-2.5 shadow-sm transition focus-within:z-1 focus-within:border-base-content/12 focus-within:bg-base-100 focus-within:shadow-md hover:z-1 hover:border-base-content/12 hover:bg-base-100/96 hover:shadow-md',
-			task.focused &&
-				!task.completed &&
-				'!border-warning/35 !bg-warning/5 !shadow-[0_1px_2px_rgb(255_149_0_/_0.08)]',
 			task.completed && 'text-base-content/45'
 		]}
 	>
+		{#if task.flagged && !task.completed}
+			<div class="task-flag-corner" aria-hidden="true"></div>
+		{/if}
+
 		{#if task.tag}
 			<div
 				class={['absolute inset-y-2 left-0 w-0.5 rounded-full', TASK_TAG_ACCENTS[task.tag]]}
@@ -134,11 +135,11 @@
 		>
 			<div class="flex items-center gap-1 border-b border-base-content/8 px-1 pb-1">
 				<button
-					class={[task.focused && 'text-warning', 'btn btn-square rounded-full btn-ghost btn-xs']}
+					class={[task.flagged && 'text-warning', 'btn btn-square rounded-full btn-ghost btn-xs']}
 					tabindex="-1"
-					aria-label={task.focused ? 'Remove focus' : 'Mark focus'}
-					title={task.focused ? 'Remove focus' : 'Mark focus'}
-					onclick={toggleFocus}
+					aria-label={task.flagged ? 'Unflag task' : 'Flag task'}
+					title={task.flagged ? 'Unflag task' : 'Flag task'}
+					onclick={toggleFlag}
 				>
 					★
 				</button>
@@ -251,6 +252,18 @@
 		color: inherit;
 		text-decoration: underline;
 		text-decoration-color: currentColor;
+	}
+
+	.task-flag-corner {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 1.15rem;
+		height: 1.15rem;
+		border-top-right-radius: 0.75rem;
+		background: color-mix(in oklab, var(--color-warning) 72%, transparent);
+		clip-path: polygon(100% 0, 0 0, 100% 100%);
+		pointer-events: none;
 	}
 
 	.task-left-action,
