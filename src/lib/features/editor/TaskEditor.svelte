@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import { taskExtensions } from './extensions';
-	import { isEmptyHtml, normalizeContent, type EditorDefaultTag } from './content';
+	import { normalizeContent, type EditorDefaultTag } from './content';
 
 	let {
 		content,
@@ -36,10 +36,6 @@
 	function commit() {
 		if (!editor) return;
 		const html = editor.getHTML();
-		if (isEmptyHtml(html)) {
-			editor.commands.setContent(baseline, { emitUpdate: false });
-			return;
-		}
 		if (html === baseline) return;
 		baseline = html;
 		onChange?.(html);
@@ -98,11 +94,14 @@
 	$effect(() => {
 		if (!editor || !autofocus || didAutofocus) return;
 		didAutofocus = true;
-		queueMicrotask(() => editor?.commands.focus('end'));
-		onAutofocused?.();
+		requestAnimationFrame(() => {
+			editor?.commands.focus('end');
+			onAutofocused?.();
+		});
 	});
 
 	onDestroy(() => {
+		if (editor?.isFocused) editor.commands.blur();
 		editor?.destroy();
 		editor = undefined;
 	});
@@ -118,6 +117,7 @@
 	.task-editor-host :global(.task-editor-surface) {
 		box-sizing: border-box;
 		min-width: 0;
+		min-height: 1.4em;
 		outline: none;
 		color: inherit;
 		font-size: 1rem;

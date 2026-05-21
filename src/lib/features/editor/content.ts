@@ -4,7 +4,7 @@ export type EditorDefaultTag = 'p' | 'h1' | 'h2' | 'h3';
 
 export function normalizeContent(value: string, defaultTag: EditorDefaultTag = 'p'): string {
 	if (TIPTAP_HTML_HINT.test(value)) return value;
-	if (!value) return defaultTag === 'p' ? '' : `<${defaultTag}></${defaultTag}>`;
+	if (!value) return `<${defaultTag}></${defaultTag}>`;
 
 	const escaped = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 

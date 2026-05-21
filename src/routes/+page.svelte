@@ -26,7 +26,7 @@
 			aria-label="Mission deck projects"
 		>
 			{#each deck.activeProjects as project, index (project.id)}
-				<div class="relative max-h-full shrink-0">
+				<div class={['relative max-h-full shrink-0 focus-within:z-20', index === 0 && 'pl-9']}>
 					{#if index > 0}
 						<div class="absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"></div>
 					{/if}
@@ -42,6 +42,7 @@
 						onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
 						onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
 						onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
+						onSetGroup={(taskId, group) => deck.setTaskGroup(taskId, group)}
 						onDelete={(taskId) => deck.deleteTask(taskId)}
 					/>
 				</div>

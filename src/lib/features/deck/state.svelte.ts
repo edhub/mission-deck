@@ -187,7 +187,7 @@ class DeckState {
 	}
 
 	async addTask(projectId: string, group: TaskGroup, content = '') {
-		const initialContent = content.trim();
+		const initialContent = content;
 		const timestamp = now();
 		const siblings = this.tasks.filter((task) => task.projectId === projectId && !task.archived);
 		const task: Task = {
@@ -212,7 +212,16 @@ class DeckState {
 		const task = this.tasks.find((item) => item.id === taskId);
 		if (!task) return;
 
-		task.content = content.trim() || task.content;
+		task.content = content;
+		task.updatedAt = now();
+		await saveTask(taskSnapshot(task));
+	}
+
+	async setTaskGroup(taskId: string, group: TaskGroup) {
+		const task = this.tasks.find((item) => item.id === taskId);
+		if (!task || task.group === group) return;
+
+		task.group = group;
 		task.updatedAt = now();
 		await saveTask(taskSnapshot(task));
 	}

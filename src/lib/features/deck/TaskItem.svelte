@@ -1,159 +1,292 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import { TaskEditor } from '$lib/features/editor';
-	import type { Task } from './types';
+	import { TASK_GROUP_LABELS, TASK_GROUPS, type Task, type TaskGroup } from './types';
 
 	let {
 		task,
 		onToggleCompleted,
 		onToggleFocus,
 		onUpdateContent,
+		onSetGroup,
 		onDelete,
 		autofocus = false,
-		onAutofocused
+		onAutofocused,
+		readOnly = false
 	}: {
 		task: Task;
 		onToggleCompleted: (taskId: string) => void;
 		onToggleFocus: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
+		onSetGroup: (taskId: string, group: TaskGroup) => void;
 		onDelete: (taskId: string) => void;
 		autofocus?: boolean;
 		onAutofocused?: () => void;
+		readOnly?: boolean;
 	} = $props();
 
-	let actionButtonEl = $state<HTMLButtonElement>();
-	let menuEl = $state<HTMLDivElement>();
-	let menuOpen = $state(false);
-	let menuLeft = $state(0);
-	let menuTop = $state(0);
+	let editorFocused = $state(false);
+	let actionsOpen = $derived(editorFocused && !readOnly);
 
-	function placeMenu() {
-		if (!actionButtonEl || !menuEl) return;
-		const buttonRect = actionButtonEl.getBoundingClientRect();
-		const menuRect = menuEl.getBoundingClientRect();
-		const gap = 6;
-		const margin = 8;
-		const left = Math.min(
-			Math.max(margin, buttonRect.right - menuRect.width),
-			window.innerWidth - menuRect.width - margin
-		);
-		const belowTop = buttonRect.bottom + gap;
-		const aboveTop = buttonRect.top - menuRect.height - gap;
-		const hasRoomBelow = belowTop + menuRect.height <= window.innerHeight - margin;
-
-		menuLeft = left;
-		menuTop = hasRoomBelow ? belowTop : Math.max(margin, aboveTop);
-	}
-
-	async function toggleTaskMenu() {
-		menuOpen = !menuOpen;
-		if (!menuOpen) return;
-		await tick();
-		placeMenu();
-	}
-
-	function closeTaskMenu() {
-		menuOpen = false;
-		actionButtonEl?.blur();
+	function keepEditorFocusRegion(node: HTMLElement) {
+		const keepFocus = (event: MouseEvent) => event.preventDefault();
+		node.addEventListener('mousedown', keepFocus);
+		return {
+			destroy() {
+				node.removeEventListener('mousedown', keepFocus);
+			}
+		};
 	}
 
 	function toggleCompleted() {
 		onToggleCompleted(task.id);
-		closeTaskMenu();
 	}
 
 	function toggleFocus() {
 		onToggleFocus(task.id);
-		closeTaskMenu();
+	}
+
+	function setGroup(group: TaskGroup) {
+		onSetGroup(task.id, group);
 	}
 
 	function deleteTask() {
+		// Blur before unmount; relying on TaskEditor.onDestroy's blur leaves focus stuck and breaks the menu on subsequent tasks.
+		if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 		onDelete(task.id);
-		closeTaskMenu();
 	}
-
-	function closeOnOutsideClick(event: MouseEvent) {
-		const target = event.target as Node;
-		if (actionButtonEl?.contains(target) || menuEl?.contains(target)) return;
-		closeTaskMenu();
-	}
-
-	function closeOnEscape(event: KeyboardEvent) {
-		if (event.key === 'Escape') closeTaskMenu();
-	}
-
-	$effect(() => {
-		if (!menuOpen) return;
-		const onScroll = () => closeTaskMenu();
-		const onResize = () => placeMenu();
-		// capture phase: scroll doesn't bubble, so we need to catch ancestor scroll containers
-		window.addEventListener('scroll', onScroll, true);
-		window.addEventListener('resize', onResize);
-		return () => {
-			window.removeEventListener('scroll', onScroll, true);
-			window.removeEventListener('resize', onResize);
-		};
-	});
 </script>
 
-<svelte:window onclick={closeOnOutsideClick} onkeydown={closeOnEscape} />
+<div class="task-row relative">
+	{#if !readOnly}
+		<!-- Action buttons intentionally stay out of the tab order; Tab is reserved for rich-text editing inside the task. -->
+		<div
+			class={['task-left-action', actionsOpen && 'is-open']}
+			aria-hidden={!actionsOpen}
+			use:keepEditorFocusRegion
+		>
+			<button
+				class={[
+					'task-check-button btn btn-square rounded-full border-0 btn-xs',
+					task.completed
+						? 'bg-base-content/45 text-base-100 hover:bg-base-content/55'
+						: 'bg-base-100 text-base-content/70 hover:bg-base-200'
+				]}
+				tabindex="-1"
+				aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
+				title={task.completed ? 'Mark incomplete' : 'Mark complete'}
+				onclick={toggleCompleted}
+			>
+				✓
+			</button>
+		</div>
+	{/if}
 
-<div
-	class={[
-		'group/task relative block rounded-xl border border-base-content/8 bg-base-100/90 px-3 py-2.5 shadow-sm transition focus-within:z-1 focus-within:border-primary/55 focus-within:bg-base-100 focus-within:shadow-md hover:z-1 hover:border-base-content/12 hover:bg-base-100/96 hover:shadow-md hover:focus-within:border-primary/55',
-		task.focused && '!border-warning/35 !bg-warning/5 !shadow-[0_1px_2px_rgb(255_149_0_/_0.08)]',
-		task.completed && 'text-base-content/45'
-	]}
->
-	<div class="min-w-0">
-		<TaskEditor
-			content={task.content}
-			editable={!task.completed}
-			muted={task.completed}
-			{autofocus}
-			{onAutofocused}
-			onChange={(html) => onUpdateContent(task.id, html)}
-		/>
+	<div
+		class={[
+			'group/task relative block rounded-xl border border-base-content/8 bg-base-100/90 px-3 py-2.5 shadow-sm transition focus-within:z-1 focus-within:border-primary/55 focus-within:bg-base-100 focus-within:shadow-md hover:z-1 hover:border-base-content/12 hover:bg-base-100/96 hover:shadow-md hover:focus-within:border-primary/55',
+			task.focused && !task.completed && '!border-warning/35 !bg-warning/5 !shadow-[0_1px_2px_rgb(255_149_0_/_0.08)]',
+			task.completed && 'text-base-content/45'
+		]}
+	>
+		<div class="min-w-0">
+			{#if readOnly}
+				<div class={['archived-task-content', task.completed && 'is-muted']}>
+					<!-- Trusted local TipTap HTML from our own IndexedDB archive; sanitize first if this ever accepts imported/untrusted content. -->
+					{@html task.content}
+				</div>
+			{:else}
+				<TaskEditor
+					content={task.content}
+					editable={true}
+					muted={task.completed}
+					{autofocus}
+					{onAutofocused}
+					onFocus={() => (editorFocused = true)}
+					onBlur={() => (editorFocused = false)}
+					onChange={(html) => onUpdateContent(task.id, html)}
+				/>
+			{/if}
+		</div>
 	</div>
 
-	<button
-		bind:this={actionButtonEl}
-		class="btn absolute top-2 right-2 z-2 btn-circle text-base-content/40 opacity-0 btn-ghost transition btn-xs group-focus-within/task:opacity-100 group-hover/task:opacity-100 focus-visible:opacity-100"
-		aria-label="Task actions"
-		onclick={(event) => {
-			event.stopPropagation();
-			toggleTaskMenu();
-		}}
-	>
-		⋯
-	</button>
-
-	{#if menuOpen}
+	{#if !readOnly}
 		<div
-			bind:this={menuEl}
-			class="fixed z-50 w-max rounded-box border border-black/10 bg-base-100/96 p-1 shadow-lg backdrop-blur-lg"
-			style={`left: ${menuLeft}px; top: ${menuTop}px;`}
+			class={['task-menu-panel', actionsOpen && 'is-open']}
+			aria-hidden={!actionsOpen}
+			use:keepEditorFocusRegion
 		>
-			<ul class="menu w-max menu-sm">
-				<li>
-					<button class="justify-start whitespace-nowrap" onclick={toggleCompleted}
-						>{task.completed ? 'Mark incomplete' : 'Mark complete'}</button
-					>
-				</li>
-				<li>
+			<div class="flex items-center gap-1 border-b border-base-content/8 px-1 pb-1">
+				<button
+					class={[task.focused && 'text-warning', 'btn btn-square rounded-full btn-ghost btn-xs']}
+					tabindex="-1"
+					aria-label={task.focused ? 'Remove focus' : 'Mark focus'}
+					title={task.focused ? 'Remove focus' : 'Mark focus'}
+					onclick={toggleFocus}
+				>
+					★
+				</button>
+				<button
+					class="btn btn-square rounded-full text-error/75 btn-ghost btn-xs hover:text-error"
+					tabindex="-1"
+					aria-label="Delete task"
+					title="Delete task"
+					onclick={deleteTask}
+				>
+					×
+				</button>
+			</div>
+
+			<div class="grid gap-0.5 pt-1">
+				{#each TASK_GROUPS as group}
 					<button
-						class={[task.focused && 'text-warning', 'justify-start whitespace-nowrap']}
-						onclick={toggleFocus}
+						class={[
+							'btn h-6 min-h-6 justify-start rounded-lg px-2 text-xs font-medium whitespace-nowrap btn-ghost',
+							group === task.group && 'bg-primary/10 text-primary'
+						]}
+						tabindex="-1"
+						onclick={() => setGroup(group)}
 					>
-						{task.focused ? 'Remove focus' : 'Mark focus'}
+						{TASK_GROUP_LABELS[group]}
 					</button>
-				</li>
-				<li>
-					<button class="justify-start whitespace-nowrap hover:text-error" onclick={deleteTask}
-						>Delete task</button
-					>
-				</li>
-			</ul>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>
+
+<style>
+	.archived-task-content {
+		box-sizing: border-box;
+		min-width: 0;
+		font-size: 1rem;
+		line-height: 1.4;
+		padding-block: 0.125rem;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	.archived-task-content.is-muted {
+		text-decoration: line-through;
+	}
+
+	.archived-task-content :global(p) {
+		margin: 0;
+	}
+
+	.archived-task-content :global(p + p) {
+		margin-top: 0.25rem;
+	}
+
+	.archived-task-content :global(ul),
+	.archived-task-content :global(ol) {
+		margin: 0.25rem 0 0;
+		padding-left: 1.25rem;
+	}
+
+	.archived-task-content :global(ul) {
+		list-style: disc;
+	}
+
+	.archived-task-content :global(ol) {
+		list-style: decimal;
+	}
+
+	.archived-task-content :global(li) {
+		margin: 0.15rem 0;
+		padding-left: 0.1rem;
+	}
+
+	.archived-task-content :global(li p) {
+		margin: 0;
+	}
+
+	.archived-task-content :global(h1),
+	.archived-task-content :global(h2),
+	.archived-task-content :global(h3) {
+		margin: 0;
+		font-weight: 650;
+		letter-spacing: -0.025em;
+		line-height: 1.15;
+	}
+
+	.archived-task-content :global(h1) {
+		font-size: 1.25rem;
+	}
+
+	.archived-task-content :global(h2) {
+		font-size: 1.08rem;
+	}
+
+	.archived-task-content :global(h3) {
+		font-size: 1rem;
+	}
+
+	.archived-task-content :global(code) {
+		padding: 0.05em 0.3em;
+		border-radius: 0.3rem;
+		background: rgb(0 0 0 / 6%);
+		font-family:
+			ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+		font-size: 0.82em;
+	}
+
+	.archived-task-content :global(a) {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: currentColor;
+	}
+
+	.task-left-action,
+	.task-menu-panel {
+		position: absolute;
+		z-index: 50;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 120ms ease-out,
+			transform 140ms cubic-bezier(0.2, 0, 0, 1);
+	}
+
+	.task-left-action {
+		top: 0.65rem;
+		right: calc(100% + 0.45rem);
+		transform: translateX(0.25rem) scale(0.96);
+	}
+
+	.task-check-button {
+		box-shadow:
+			0 3px 10px rgb(0 0 0 / 10%),
+			0 1px 2px rgb(0 0 0 / 10%);
+	}
+
+	.task-menu-panel {
+		top: 0;
+		left: calc(100% + 0.45rem);
+		width: fit-content;
+		min-width: max-content;
+		border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+		border-radius: 1rem;
+		background: color-mix(in oklab, var(--color-base-100) 94%, transparent);
+		padding: 0.35rem;
+		box-shadow:
+			0 10px 24px rgb(0 0 0 / 10%),
+			0 1px 2px rgb(0 0 0 / 8%);
+		backdrop-filter: blur(16px);
+		transform: translateX(-0.25rem) scale(0.96);
+		transform-origin: top left;
+	}
+
+	.task-left-action.is-open,
+	.task-menu-panel.is-open {
+		opacity: 1;
+		pointer-events: auto;
+		transform: translateX(0) scale(1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.task-left-action,
+		.task-menu-panel {
+			transition: none;
+		}
+	}
+</style>
