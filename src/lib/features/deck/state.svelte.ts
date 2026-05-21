@@ -168,6 +168,21 @@ class DeckState {
 		await saveProject(projectSnapshot(project));
 	}
 
+	async reorderProjects(orderedIds: string[]) {
+		const timestamp = now();
+		const updated: Project[] = [];
+		for (let i = 0; i < orderedIds.length; i++) {
+			const project = this.projects.find((p) => p.id === orderedIds[i]);
+			if (!project) continue;
+			const nextOrder = ORDER_STEP * (i + 1);
+			if (project.order === nextOrder) continue;
+			project.order = nextOrder;
+			project.updatedAt = timestamp;
+			updated.push(project);
+		}
+		await Promise.all(updated.map((p) => saveProject(projectSnapshot(p))));
+	}
+
 	async archiveProject(projectId: string) {
 		const project = this.projects.find((item) => item.id === projectId);
 		if (!project) return;

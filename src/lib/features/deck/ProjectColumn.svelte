@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dragHandle } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
 	import TaskItem from './TaskItem.svelte';
 	import type { Project, Task, TaskGroup } from './types';
@@ -51,6 +52,24 @@
 					onChange={(html) => onRenameProject(project.id, html)}
 				/>
 			</div>
+
+			<button
+				type="button"
+				class="btn absolute top-0 right-14 btn-circle text-base-content/45 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+				aria-label="Drag to reorder project"
+				use:dragHandle
+			>
+				<svg viewBox="0 0 8 12" class="size-3" aria-hidden="true">
+					<g fill="currentColor">
+						<circle cx="2" cy="2" r="1" />
+						<circle cx="2" cy="6" r="1" />
+						<circle cx="2" cy="10" r="1" />
+						<circle cx="6" cy="2" r="1" />
+						<circle cx="6" cy="6" r="1" />
+						<circle cx="6" cy="10" r="1" />
+					</g>
+				</svg>
+			</button>
 
 			<button
 				class="btn absolute top-0 right-7 btn-circle text-base-content/50 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100"

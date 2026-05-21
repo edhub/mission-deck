@@ -1,8 +1,22 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import ProjectColumn from '$lib/features/deck/ProjectColumn.svelte';
 	import { deck } from '$lib/features/deck/state.svelte';
+	import type { Project } from '$lib/features/deck/types';
+
 	let sidebarOpen = $state(false);
+	let dragItems = $state<Project[] | null>(null);
+	const items = $derived(dragItems ?? deck.activeProjects);
+
+	function handleConsider(event: CustomEvent<DndEvent<Project>>) {
+		dragItems = event.detail.items;
+	}
+
+	function handleFinalize(event: CustomEvent<DndEvent<Project>>) {
+		deck.reorderProjects(event.detail.items.map((project) => project.id));
+		dragItems = null;
+	}
 
 	onMount(() => {
 		deck.load();
@@ -25,28 +39,44 @@
 			class="relative z-10 flex h-full [scrollbar-width:thin] gap-8 overflow-x-auto overflow-y-hidden px-5 pt-4 pb-5"
 			aria-label="Mission deck projects"
 		>
-			{#each deck.activeProjects as project, index (project.id)}
-				<div class={['relative max-h-full shrink-0 focus-within:z-20', index === 0 && 'pl-9']}>
-					{#if index > 0}
-						<div class="absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"></div>
-					{/if}
+			<div
+				class="deck-dndzone flex h-full shrink-0 gap-8"
+				use:dragHandleZone={{
+					items,
+					flipDurationMs: 180,
+					type: 'project',
+					dropTargetStyle: {},
+					zoneTabIndex: -1,
+					zoneItemTabIndex: -1
+				}}
+				onconsider={handleConsider}
+				onfinalize={handleFinalize}
+			>
+				{#each items as project, index (project.id)}
+					<div class={['relative max-h-full shrink-0 focus-within:z-20', index === 0 && 'pl-9']}>
+						{#if index > 0}
+							<div
+								class="pointer-events-none absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"
+							></div>
+						{/if}
 
-					<ProjectColumn
-						{project}
-						activeTasks={deck.activeTasksForProject(project.id)}
-						archivedTasks={deck.archivedTasksForProject(project.id)}
-						onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
-						onArchiveProject={(projectId) => deck.archiveProject(projectId)}
-						onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
-						onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
-						onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
-						onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
-						onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
-						onSetGroup={(taskId, group) => deck.setTaskGroup(taskId, group)}
-						onDelete={(taskId) => deck.deleteTask(taskId)}
-					/>
-				</div>
-			{/each}
+						<ProjectColumn
+							{project}
+							activeTasks={deck.activeTasksForProject(project.id)}
+							archivedTasks={deck.archivedTasksForProject(project.id)}
+							onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
+							onArchiveProject={(projectId) => deck.archiveProject(projectId)}
+							onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
+							onAddTask={(projectId, group, content) => deck.addTask(projectId, group, content)}
+							onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
+							onToggleFocus={(taskId) => deck.toggleTaskFocus(taskId)}
+							onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}
+							onSetGroup={(taskId, group) => deck.setTaskGroup(taskId, group)}
+							onDelete={(taskId) => deck.deleteTask(taskId)}
+						/>
+					</div>
+				{/each}
+			</div>
 
 			<section class="grid max-h-full w-80 shrink-0 place-items-center px-0.5 pt-10 pb-3">
 				<button
@@ -120,3 +150,15 @@
 		☰
 	</button>
 </div>
+
+<style>
+	:global(.deck-dndzone > *:focus),
+	:global(.deck-dndzone > *:focus-visible) {
+		outline: none;
+	}
+
+	:global(#dnd-action-dragged-el:focus),
+	:global(#dnd-action-dragged-el:focus-visible) {
+		outline: none;
+	}
+</style>
