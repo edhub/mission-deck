@@ -42,6 +42,25 @@ just lint
 just build
 ```
 
+## Shelf sync
+
+Mission Deck can upload and restore local IndexedDB snapshots through `https://shelf.tyun.fun`.
+The app uses GitHub OAuth through Shelf, then stores the returned `shelf_...` API token in browser `localStorage`.
+
+Shelf server configuration for production:
+
+```env
+ALLOWED_REDIRECT_URLS=https://deck.tyun.fun
+CORS_ALLOWED_ORIGIN_SUFFIXES=tyun.fun
+```
+
+Client flow:
+
+1. Open the left sidebar.
+2. Click **Sign in with GitHub** under **Shelf sync**.
+3. After GitHub OAuth, Shelf redirects back to the app root with a token.
+4. Use **Upload backup** or restore one of the listed `mission-deck.json` backups.
+
 ## Project plan
 
 See [`plan.md`](./plan.md).

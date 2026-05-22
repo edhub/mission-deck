@@ -3,6 +3,8 @@
 	import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import ProjectColumn from '$lib/features/deck/ProjectColumn.svelte';
 	import { deck } from '$lib/features/deck/state.svelte';
+	import { getShelfToken, setShelfToken } from '$lib/features/sync/session';
+	import SyncPanel from '$lib/features/sync/SyncPanel.svelte';
 	import type { Project } from '$lib/features/deck/types';
 
 	let sidebarOpen = $state(false);
@@ -37,6 +39,22 @@
 	}
 
 	onMount(() => {
+		const url = new URL(location.href);
+		const token = url.searchParams.get('token');
+		if (token) {
+			url.searchParams.delete('token');
+			history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+
+			const existing = getShelfToken();
+			if (
+				!existing ||
+				existing === token ||
+				confirm('Replace your current Shelf sign-in with this new token?')
+			) {
+				setShelfToken(token);
+			}
+		}
+
 		deck.load();
 	});
 </script>
@@ -168,6 +186,8 @@
 				</button>
 			{/if}
 		</nav>
+
+		<SyncPanel />
 	</aside>
 
 	<button
