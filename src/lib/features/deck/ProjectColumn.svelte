@@ -41,9 +41,9 @@
 
 <article class="group relative h-full max-h-full w-80 shrink-0 overflow-visible">
 	<div
-		class="-ml-9 h-full max-h-full w-[calc(100%+13.25rem)] [scrollbar-width:none] overflow-x-hidden overflow-y-auto pt-1.5 pr-[11rem] pb-40 pl-9 [&::-webkit-scrollbar]:hidden"
+		class="pointer-events-none -ml-9 h-full max-h-full w-[calc(100%+13.25rem)] [scrollbar-width:none] overflow-x-hidden overflow-y-auto pt-1.5 pr-[11rem] pb-40 pl-9 [&::-webkit-scrollbar]:hidden"
 	>
-		<header class="relative w-80 px-0.5 pb-6">
+		<header class="pointer-events-auto relative w-80 px-0.5 pb-6">
 			<div class="min-w-0">
 				<TaskEditor
 					content={project.name}
@@ -102,7 +102,7 @@
 			</div>
 		</header>
 
-		<div class="grid min-h-1 w-80 gap-6">
+		<div class="pointer-events-auto grid min-h-1 w-80 gap-6">
 			{#each activeTasks as task (task.id)}
 				<TaskItem
 					{task}
@@ -117,7 +117,7 @@
 			{/each}
 		</div>
 
-		<section class="mt-4 w-80">
+		<section class="pointer-events-auto mt-4 w-80">
 			<button
 				class="btn btn-block justify-start gap-1.5 font-semibold text-base-content/40 btn-ghost btn-xs"
 				onclick={() => onToggleCompletedExpanded(project.id)}
