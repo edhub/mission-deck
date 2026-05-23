@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { sanitizeTiptapHtml } from '$lib/features/editor/content';
-import { deleteTask, loadDeck, replaceDeck, saveProject, saveTask } from './db';
+import { deleteProject, deleteTask, loadDeck, replaceDeck, saveProject, saveTask } from './db';
 import {
 	normalizeTaskTag,
 	type DeckSnapshot,
@@ -76,14 +76,20 @@ function parseDeckSnapshot(value: unknown): DeckSnapshot {
 
 	const projects: Project[] = value.projects.map((item) => {
 		if (!isRecord(item)) throw new Error('Invalid import: project must be an object.');
+		const completedAt = item.completedAt;
+		if (completedAt !== undefined && !isString(completedAt)) {
+			throw new Error('Invalid import: project completedAt must be a string.');
+		}
+
 		return {
 			id: requireString(item, 'id'),
 			name: sanitizeTiptapHtml(requireString(item, 'name')),
 			order: requireNumber(item, 'order'),
-			archived: requireBoolean(item, 'archived'),
+			completed: 'completed' in item ? requireBoolean(item, 'completed') : false,
 			completedExpanded: requireBoolean(item, 'completedExpanded'),
 			createdAt: requireString(item, 'createdAt'),
-			updatedAt: requireString(item, 'updatedAt')
+			updatedAt: requireString(item, 'updatedAt'),
+			completedAt
 		};
 	});
 
@@ -146,7 +152,7 @@ function sampleDeck(): DeckSnapshot {
 			id: createId('project'),
 			name: 'Mission Deck',
 			order: ORDER_STEP,
-			archived: false,
+			completed: false,
 			completedExpanded: false,
 			createdAt,
 			updatedAt: createdAt
@@ -155,7 +161,7 @@ function sampleDeck(): DeckSnapshot {
 			id: createId('project'),
 			name: 'Personal Ops',
 			order: ORDER_STEP * 2,
-			archived: false,
+			completed: false,
 			completedExpanded: false,
 			createdAt,
 			updatedAt: createdAt
@@ -210,7 +216,13 @@ class DeckState {
 	loaded = $state(false);
 
 	get activeProjects() {
-		return this.projects.filter((project) => !project.archived).sort((a, b) => a.order - b.order);
+		return this.projects.filter((project) => !project.completed).sort((a, b) => a.order - b.order);
+	}
+
+	get completedProjects() {
+		return this.projects
+			.filter((project) => project.completed)
+			.sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
 	}
 
 	get hasCompletedTasks() {
@@ -264,7 +276,7 @@ class DeckState {
 			id: createId('project'),
 			name: 'New Project',
 			order: nextOrder(this.projects),
-			archived: false,
+			completed: false,
 			completedExpanded: false,
 			createdAt: timestamp,
 			updatedAt: timestamp
@@ -298,13 +310,31 @@ class DeckState {
 		await Promise.all(updated.map((p) => saveProject(projectSnapshot(p))));
 	}
 
-	async archiveProject(projectId: string) {
+	async completeProject(projectId: string) {
 		const project = this.projects.find((item) => item.id === projectId);
 		if (!project) return;
 
-		project.archived = true;
+		const timestamp = now();
+		project.completed = true;
+		project.completedAt = timestamp;
+		project.updatedAt = timestamp;
+		await saveProject(projectSnapshot(project));
+	}
+
+	async reopenProject(projectId: string) {
+		const project = this.projects.find((item) => item.id === projectId);
+		if (!project) return;
+
+		project.completed = false;
+		project.completedAt = undefined;
 		project.updatedAt = now();
 		await saveProject(projectSnapshot(project));
+	}
+
+	async deleteProject(projectId: string) {
+		this.projects = this.projects.filter((project) => project.id !== projectId);
+		this.tasks = this.tasks.filter((task) => task.projectId !== projectId);
+		await deleteProject(projectId);
 	}
 
 	async toggleCompletedExpanded(projectId: string) {

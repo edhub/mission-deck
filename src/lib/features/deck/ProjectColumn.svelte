@@ -9,7 +9,8 @@
 		activeTasks,
 		archivedTasks,
 		onRenameProject,
-		onArchiveProject,
+		onCompleteProject,
+		onDeleteProject,
 		onToggleCompletedExpanded,
 		onAddTask,
 		onToggleCompleted,
@@ -22,7 +23,8 @@
 		activeTasks: Task[];
 		archivedTasks: Task[];
 		onRenameProject: (projectId: string, name: string) => void;
-		onArchiveProject: (projectId: string) => void;
+		onCompleteProject: (projectId: string) => void;
+		onDeleteProject: (projectId: string) => void;
 		onToggleCompletedExpanded: (projectId: string) => void;
 		onAddTask: (projectId: string, tag: TaskTag | null, content?: string) => Promise<string>;
 		onToggleCompleted: (taskId: string) => void;
@@ -92,10 +94,21 @@
 					<li>
 						<button
 							onclick={() => {
-								onArchiveProject(project.id);
+								onCompleteProject(project.id);
 							}}
 						>
-							Archive
+							Complete project
+						</button>
+					</li>
+					<li>
+						<button
+							class="text-error"
+							onclick={() => {
+								if (confirm('Delete this project and all of its tasks?'))
+									onDeleteProject(project.id);
+							}}
+						>
+							Delete project
 						</button>
 					</li>
 				</ul>
@@ -117,32 +130,33 @@
 			{/each}
 		</div>
 
-		<section class="pointer-events-auto mt-4 w-80">
-			<button
-				class="btn btn-block justify-start gap-1.5 font-semibold text-base-content/40 btn-ghost btn-xs"
-				onclick={() => onToggleCompletedExpanded(project.id)}
-			>
-				<span>{project.completedExpanded ? '⌄' : '›'}</span>
-				Archive
-				<span class="ml-auto font-medium text-base-content/30">{archivedTasks.length}</span>
-			</button>
+		{#if archivedTasks.length > 0}
+			<section class="pointer-events-auto mt-4 w-80">
+				<button
+					class="btn btn-block justify-start gap-1.5 font-semibold text-base-content/40 btn-ghost btn-xs"
+					onclick={() => onToggleCompletedExpanded(project.id)}
+				>
+					<span>{project.completedExpanded ? '⌄' : '›'}</span>
+					Archive
+					<span class="ml-auto font-medium text-base-content/30">{archivedTasks.length}</span>
+				</button>
 
-			{#if project.completedExpanded}
-				<div class="mt-1 grid gap-3 opacity-78">
-					{#each archivedTasks as task (task.id)}
-						<TaskItem
-							{task}
-							{onToggleCompleted}
-							{onToggleFlag}
-							{onUpdateContent}
-							{onSetTag}
-							{onDelete}
-							readOnly
-						/>
-					{/each}
-				</div>
-			{/if}
-		</section>
+				{#if project.completedExpanded}
+					<div class="mt-4 grid gap-3 opacity-78">
+						{#each archivedTasks as task (task.id)}
+							<TaskItem
+								{task}
+								{onToggleCompleted}
+								{onToggleFlag}
+								{onUpdateContent}
+								{onSetTag}
+								{onDelete}
+								readOnly
+							/>
+						{/each}
+					</div>
+				{/if}
+			</section>
+		{/if}
 	</div>
 </article>
-

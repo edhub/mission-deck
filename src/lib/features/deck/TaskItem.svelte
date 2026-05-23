@@ -59,15 +59,15 @@
 	{#if !readOnly}
 		<div
 			class={[
-				'absolute top-2.5 right-[calc(100%+0.45rem)] z-50 pointer-events-none opacity-0 transition-all duration-150 ease-out scale-96 translate-x-1',
-				actionsOpen && '!opacity-100 !pointer-events-auto !translate-x-0 !scale-100'
+				'pointer-events-none absolute top-2.5 right-[calc(100%+0.45rem)] z-50 translate-x-1 scale-96 opacity-0 transition-all duration-150 ease-out',
+				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
 			use:keepEditorFocusRegion
 		>
 			<button
 				class={[
-					'btn btn-square rounded-full border-0 btn-xs shadow-[0_3px_10px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/10%)]',
+					'btn btn-square rounded-full border-0 shadow-[0_3px_10px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/10%)] btn-xs',
 					task.completed
 						? 'bg-base-content/45 text-base-100 hover:bg-base-content/55'
 						: 'bg-base-100 text-base-content/70 hover:bg-base-200'
@@ -90,7 +90,7 @@
 	>
 		{#if task.flagged && !task.completed}
 			<div
-				class="absolute top-0 right-0 size-[1.15rem] rounded-tr-xl bg-warning/72 pointer-events-none [clip-path:polygon(100%_0,0_0,100%_100%)]"
+				class="pointer-events-none absolute top-0 right-0 size-[1.15rem] rounded-tr-xl bg-warning/72 [clip-path:polygon(100%_0,0_0,100%_100%)]"
 				aria-hidden="true"
 			></div>
 		{/if}
@@ -125,8 +125,8 @@
 	{#if !readOnly}
 		<div
 			class={[
-				'absolute top-0 left-[calc(100%+0.45rem)] z-50 w-fit min-w-max rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg pointer-events-none opacity-0 origin-top-left transition-all duration-150 ease-out scale-96 -translate-x-1',
-				actionsOpen && '!opacity-100 !pointer-events-auto !translate-x-0 !scale-100'
+				'pointer-events-none absolute top-0 left-[calc(100%+0.45rem)] z-50 w-fit min-w-max origin-top-left -translate-x-1 scale-96 rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 opacity-0 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg transition-all duration-150 ease-out',
+				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
 			use:keepEditorFocusRegion

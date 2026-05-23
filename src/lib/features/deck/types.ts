@@ -6,9 +6,10 @@ export interface Project {
 	id: string;
 	name: string;
 	order: number;
-	archived: boolean;
+	completed: boolean;
 	completedExpanded: boolean;
 	createdAt: string;
+	completedAt?: string;
 	updatedAt: string;
 }
 

@@ -25,12 +25,31 @@ interface MissionDeckDB extends DBSchema {
 
 let dbPromise: Promise<IDBPDatabase<MissionDeckDB>> | undefined;
 
+type PersistedProject = Omit<Project, 'completed'> & {
+	archived?: unknown;
+	completed?: unknown;
+	completedAt?: unknown;
+};
+
 type PersistedTask = Omit<Task, 'tag' | 'flagged'> & {
 	flagged?: unknown;
 	focused?: unknown;
 	group?: unknown;
 	tag?: unknown;
 };
+
+function normalizePersistedProject(project: PersistedProject): Project {
+	return {
+		id: project.id,
+		name: project.name,
+		order: project.order,
+		completed: project.completed === true,
+		completedAt: typeof project.completedAt === 'string' ? project.completedAt : undefined,
+		completedExpanded: project.completedExpanded,
+		createdAt: project.createdAt,
+		updatedAt: project.updatedAt
+	};
+}
 
 function normalizePersistedTask(task: PersistedTask): Task {
 	const rawTag = 'tag' in task ? task.tag : task.group;
@@ -81,7 +100,7 @@ export async function loadDeck(): Promise<DeckSnapshot> {
 
 	return {
 		version: 1,
-		projects: projects.sort((a, b) => a.order - b.order),
+		projects: projects.map(normalizePersistedProject).sort((a, b) => a.order - b.order),
 		tasks: tasks.map(normalizePersistedTask).sort((a, b) => a.order - b.order)
 	};
 }
@@ -99,6 +118,18 @@ export async function saveTask(task: Task) {
 export async function deleteTask(taskId: string) {
 	const db = await getDb();
 	await db.delete('tasks', taskId);
+}
+
+export async function deleteProject(projectId: string) {
+	const db = await getDb();
+	const tx = db.transaction(['projects', 'tasks'], 'readwrite');
+	const tasks = await tx.objectStore('tasks').index('by-project').getAllKeys(projectId);
+
+	await Promise.all([
+		tx.objectStore('projects').delete(projectId),
+		...tasks.map((taskId) => tx.objectStore('tasks').delete(taskId as string))
+	]);
+	await tx.done;
 }
 
 export async function replaceDeck(snapshot: DeckSnapshot) {

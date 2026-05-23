@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
 	import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import ProjectColumn from '$lib/features/deck/ProjectColumn.svelte';
 	import { deck } from '$lib/features/deck/state.svelte';
@@ -89,7 +91,13 @@
 				onfinalize={handleFinalize}
 			>
 				{#each items as project, index (project.id)}
-					<div class={['relative max-h-full shrink-0 focus-within:z-20', index === 0 && 'pl-9']}>
+					<div
+						class={[
+							'relative max-h-full shrink-0 overflow-hidden focus-within:z-20',
+							index === 0 && 'pl-9'
+						]}
+						animate:flip={{ duration: 180 }}
+					>
 						{#if index > 0}
 							<div
 								class="pointer-events-none absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"
@@ -101,7 +109,8 @@
 							activeTasks={deck.activeTasksForProject(project.id)}
 							archivedTasks={deck.archivedTasksForProject(project.id)}
 							onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
-							onArchiveProject={(projectId) => deck.archiveProject(projectId)}
+							onCompleteProject={(projectId) => deck.completeProject(projectId)}
+							onDeleteProject={(projectId) => deck.deleteProject(projectId)}
 							onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
 							onAddTask={(projectId, tag, content) => deck.addTask(projectId, tag, content)}
 							onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
@@ -164,6 +173,12 @@
 		</div>
 
 		<nav class="grid gap-1">
+			<a class="btn justify-start btn-ghost btn-sm" href={resolve('/completed')}>
+				Completed projects
+				{#if deck.completedProjects.length > 0}
+					<span class="ml-auto opacity-50">{deck.completedProjects.length}</span>
+				{/if}
+			</a>
 			<button class="btn justify-start btn-ghost btn-sm" onclick={() => deck.exportDeck()}>
 				Export
 			</button>
@@ -198,4 +213,3 @@
 		☰
 	</button>
 </div>
-
