@@ -79,8 +79,15 @@ function sanitizeNode(node: Node, document: Document): Node | DocumentFragment |
 	if (tagName === 'ul' && element.getAttribute('data-type') === 'taskList') {
 		clean.setAttribute('data-type', 'taskList');
 	}
-	if (tagName === 'li' && ['true', 'false'].includes(element.getAttribute('data-checked') ?? '')) {
-		clean.setAttribute('data-checked', element.getAttribute('data-checked') ?? 'false');
+	if (tagName === 'li') {
+		const isTaskItem =
+			element.getAttribute('data-type') === 'taskItem' || element.hasAttribute('data-checked');
+		if (isTaskItem) {
+			clean.setAttribute('data-type', 'taskItem');
+			const dataChecked = element.getAttribute('data-checked');
+			const checked = dataChecked === 'true' || dataChecked === '';
+			clean.setAttribute('data-checked', checked ? 'true' : 'false');
+		}
 	}
 	if (tagName === 'input') {
 		clean.setAttribute('type', 'checkbox');
