@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { TaskEditor } from '$lib/features/editor';
+	import { floating } from '$lib/actions/floating';
+	import { portal } from '$lib/actions/portal';
 	import { TASK_TAG_ACCENTS, TASK_TAG_LABELS, TASK_TAGS, type Task, type TaskTag } from './types';
 
 	let {
@@ -26,6 +28,17 @@
 
 	let editorFocused = $state(false);
 	let actionsOpen = $derived(editorFocused && !readOnly);
+	let taskRow = $state<HTMLElement | null>(null);
+
+	const GAP = 7.2;
+
+	function positionLeft(rect: DOMRect) {
+		return { top: rect.top + 10, right: window.innerWidth - rect.left + GAP };
+	}
+
+	function positionRight(rect: DOMRect) {
+		return { top: rect.top, left: rect.right + GAP };
+	}
 
 	function keepEditorFocusRegion(node: HTMLElement) {
 		const keepFocus = (event: MouseEvent) => event.preventDefault();
@@ -55,14 +68,16 @@
 	}
 </script>
 
-<div class="task-row relative">
+<div bind:this={taskRow}>
 	{#if !readOnly}
 		<div
 			class={[
-				'pointer-events-none absolute top-2.5 right-[calc(100%+0.45rem)] z-50 translate-x-1 scale-96 opacity-0 transition-all duration-150 ease-out',
+				'pointer-events-none z-50 translate-x-1 scale-96 opacity-0 transition duration-150 ease-out',
 				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
+			use:portal
+			use:floating={{ reference: taskRow, position: positionLeft }}
 			use:keepEditorFocusRegion
 		>
 			<button
@@ -125,10 +140,12 @@
 	{#if !readOnly}
 		<div
 			class={[
-				'pointer-events-none absolute top-0 left-[calc(100%+0.45rem)] z-50 w-fit min-w-max origin-top-left -translate-x-1 scale-96 rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 opacity-0 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg transition-all duration-150 ease-out',
+				'pointer-events-none z-50 w-fit min-w-max origin-top-left -translate-x-1 scale-96 rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 opacity-0 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg transition duration-150 ease-out',
 				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
+			use:portal
+			use:floating={{ reference: taskRow, position: positionRight }}
 			use:keepEditorFocusRegion
 		>
 			<div class="flex items-center gap-1 border-b border-base-content/8 px-1 pb-1">
