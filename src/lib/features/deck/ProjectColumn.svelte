@@ -48,7 +48,7 @@
 				<TaskEditor
 					content={project.name}
 					defaultTag="h1"
-					surfaceClass="project-title-editor"
+					surfaceClass="is-project-title"
 					onChange={(html) => onRenameProject(project.id, html)}
 				/>
 			</div>
@@ -146,16 +146,3 @@
 	</div>
 </article>
 
-<style>
-	:global(.project-title-editor) {
-		font-size: 1rem;
-		padding-block: 0;
-		color: color-mix(in oklch, currentColor 78%, transparent);
-	}
-
-	:global(.project-title-editor h1),
-	:global(.project-title-editor h2),
-	:global(.project-title-editor h3) {
-		color: var(--color-base-content);
-	}
-</style>

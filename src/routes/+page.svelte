@@ -199,14 +199,3 @@
 	</button>
 </div>
 
-<style>
-	:global(.deck-dndzone > *:focus),
-	:global(.deck-dndzone > *:focus-visible) {
-		outline: none;
-	}
-
-	:global(#dnd-action-dragged-el:focus),
-	:global(#dnd-action-dragged-el:focus-visible) {
-		outline: none;
-	}
-</style>

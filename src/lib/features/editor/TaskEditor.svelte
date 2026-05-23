@@ -2,7 +2,7 @@
 	import { onDestroy } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import { taskExtensions } from './extensions';
-	import { normalizeContent, type EditorDefaultTag } from './content';
+	import { normalizeContent, sanitizeTiptapHtml, type EditorDefaultTag } from './content';
 
 	let {
 		content,
@@ -33,6 +33,8 @@
 	let baseline = '';
 	let didAutofocus = false;
 
+	const sanitizedContent = $derived(editable ? '' : sanitizeTiptapHtml(content));
+
 	function commit() {
 		if (!editor) return;
 		const html = editor.getHTML();
@@ -61,7 +63,7 @@
 			content: baseline,
 			editorProps: {
 				attributes: {
-					class: ['task-editor-surface', surfaceClass].filter(Boolean).join(' ')
+					class: ['task-content', surfaceClass].filter(Boolean).join(' ')
 				}
 			},
 			onFocus: () => onFocus?.(),
@@ -74,7 +76,7 @@
 	}
 
 	$effect(() => {
-		if (host && !editor) mount(host);
+		if (editable && host && !editor) mount(host);
 	});
 
 	$effect(() => {
@@ -107,165 +109,11 @@
 	});
 </script>
 
-<div bind:this={host} class={['task-editor-host', muted && 'is-muted']}></div>
-
-<style>
-	.task-editor-host {
-		display: contents;
-	}
-
-	.task-editor-host :global(.task-editor-surface) {
-		box-sizing: border-box;
-		min-width: 0;
-		min-height: 1.4em;
-		outline: none;
-		color: inherit;
-		font-size: 1rem;
-		line-height: 1.4;
-		padding-block: 0.125rem;
-		white-space: pre-wrap;
-		word-break: break-word;
-	}
-
-	.task-editor-host :global(.task-editor-surface p) {
-		margin: 0;
-	}
-
-	.task-editor-host :global(.task-editor-surface p + p) {
-		margin-top: 0.25rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul),
-	.task-editor-host :global(.task-editor-surface ol) {
-		margin: 0.25rem 0 0;
-		padding-left: 1.25rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul) {
-		list-style: disc;
-	}
-
-	.task-editor-host :global(.task-editor-surface ol) {
-		list-style: decimal;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul ul),
-	.task-editor-host :global(.task-editor-surface ol ul) {
-		list-style: circle;
-	}
-
-	.task-editor-host :global(.task-editor-surface li) {
-		margin: 0.15rem 0;
-		padding-left: 0.1rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface li p) {
-		margin: 0;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList']) {
-		list-style: none;
-		padding-left: 0;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li) {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		align-items: start;
-		column-gap: 0.45rem;
-		padding-left: 0;
-		white-space: normal;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li > label) {
-		display: inline-flex;
-		align-items: center;
-		margin-top: 0.26rem;
-		user-select: none;
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li input) {
-		width: 0.9rem;
-		height: 0.9rem;
-		accent-color: var(--color-primary);
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li input:checked) {
-		accent-color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
-	}
-
-	.task-editor-host :global(.task-editor-surface ul[data-type='taskList'] li > div) {
-		min-width: 0;
-		white-space: pre-wrap;
-	}
-
-	.task-editor-host
-		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div),
-	.task-editor-host
-		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div *) {
-		color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
-		text-decoration: line-through;
-	}
-
-	.task-editor-host.is-muted :global(.task-editor-surface) {
-		text-decoration: line-through;
-	}
-
-	.task-editor-host.is-muted :global(.task-editor-surface a) {
-		color: inherit;
-		text-decoration: line-through;
-		text-decoration-color: currentColor;
-	}
-
-	.task-editor-host.is-muted
-		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div),
-	.task-editor-host.is-muted
-		:global(.task-editor-surface ul[data-type='taskList'] li[data-checked='true'] > div *) {
-		color: inherit;
-	}
-
-	.task-editor-host :global(.task-editor-surface h1),
-	.task-editor-host :global(.task-editor-surface h2),
-	.task-editor-host :global(.task-editor-surface h3) {
-		margin: 0;
-		font-weight: 650;
-		letter-spacing: -0.025em;
-		line-height: 1.15;
-	}
-
-	.task-editor-host :global(.task-editor-surface h1) {
-		font-size: 1.25rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface h2) {
-		font-size: 1.08rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface h3) {
-		font-size: 1rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface h1 + p),
-	.task-editor-host :global(.task-editor-surface h2 + p),
-	.task-editor-host :global(.task-editor-surface h3 + p),
-	.task-editor-host :global(.task-editor-surface p + h1),
-	.task-editor-host :global(.task-editor-surface p + h2),
-	.task-editor-host :global(.task-editor-surface p + h3) {
-		margin-top: 0.35rem;
-	}
-
-	.task-editor-host :global(.task-editor-surface code) {
-		padding: 0.05em 0.3em;
-		border-radius: 0.3rem;
-		background: rgb(0 0 0 / 6%);
-		font-family:
-			ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-		font-size: 0.82em;
-	}
-
-	.task-editor-host :global(.task-editor-surface a) {
-		color: var(--color-primary);
-		text-decoration: underline;
-		text-decoration-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
-	}
-</style>
+{#if editable}
+	<div bind:this={host} class="contents"></div>
+{:else}
+	<div class={['task-content', surfaceClass, muted && 'is-muted']}>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html sanitizedContent}
+	</div>
+{/if}

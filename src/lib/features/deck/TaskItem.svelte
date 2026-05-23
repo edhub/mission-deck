@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { TaskEditor } from '$lib/features/editor';
-	import { sanitizeTiptapHtml } from '$lib/features/editor/content';
 	import { TASK_TAG_ACCENTS, TASK_TAG_LABELS, TASK_TAGS, type Task, type TaskTag } from './types';
 
 	let {
@@ -27,7 +26,6 @@
 
 	let editorFocused = $state(false);
 	let actionsOpen = $derived(editorFocused && !readOnly);
-	let sanitizedContent = $derived(sanitizeTiptapHtml(task.content));
 
 	function keepEditorFocusRegion(node: HTMLElement) {
 		const keepFocus = (event: MouseEvent) => event.preventDefault();
@@ -52,7 +50,6 @@
 	}
 
 	function deleteTask() {
-		// Blur before unmount; relying on TaskEditor.onDestroy's blur leaves focus stuck and breaks the menu on subsequent tasks.
 		if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 		onDelete(task.id);
 	}
@@ -60,15 +57,17 @@
 
 <div class="task-row relative">
 	{#if !readOnly}
-		<!-- Action buttons intentionally stay out of the tab order; Tab is reserved for rich-text editing inside the task. -->
 		<div
-			class={['task-left-action', actionsOpen && 'is-open']}
+			class={[
+				'absolute top-2.5 right-[calc(100%+0.45rem)] z-50 pointer-events-none opacity-0 transition-all duration-150 ease-out scale-96 translate-x-1',
+				actionsOpen && '!opacity-100 !pointer-events-auto !translate-x-0 !scale-100'
+			]}
 			aria-hidden={!actionsOpen}
 			use:keepEditorFocusRegion
 		>
 			<button
 				class={[
-					'task-check-button btn btn-square rounded-full border-0 btn-xs',
+					'btn btn-square rounded-full border-0 btn-xs shadow-[0_3px_10px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/10%)]',
 					task.completed
 						? 'bg-base-content/45 text-base-100 hover:bg-base-content/55'
 						: 'bg-base-100 text-base-content/70 hover:bg-base-200'
@@ -90,7 +89,10 @@
 		]}
 	>
 		{#if task.flagged && !task.completed}
-			<div class="task-flag-corner" aria-hidden="true"></div>
+			<div
+				class="absolute top-0 right-0 size-[1.15rem] rounded-tr-xl bg-warning/72 pointer-events-none [clip-path:polygon(100%_0,0_0,100%_100%)]"
+				aria-hidden="true"
+			></div>
 		{/if}
 
 		{#if task.tag}
@@ -107,29 +109,25 @@
 		{/if}
 
 		<div class="min-w-0">
-			{#if readOnly}
-				<div class={['archived-task-content', task.completed && 'is-muted']}>
-					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-					{@html sanitizedContent}
-				</div>
-			{:else}
-				<TaskEditor
-					content={task.content}
-					editable={true}
-					muted={task.completed}
-					{autofocus}
-					{onAutofocused}
-					onFocus={() => (editorFocused = true)}
-					onBlur={() => (editorFocused = false)}
-					onChange={(html) => onUpdateContent(task.id, html)}
-				/>
-			{/if}
+			<TaskEditor
+				content={task.content}
+				editable={!readOnly}
+				muted={task.completed}
+				{autofocus}
+				{onAutofocused}
+				onFocus={() => (editorFocused = true)}
+				onBlur={() => (editorFocused = false)}
+				onChange={(html) => onUpdateContent(task.id, html)}
+			/>
 		</div>
 	</div>
 
 	{#if !readOnly}
 		<div
-			class={['task-menu-panel', actionsOpen && 'is-open']}
+			class={[
+				'absolute top-0 left-[calc(100%+0.45rem)] z-50 w-fit min-w-max rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg pointer-events-none opacity-0 origin-top-left transition-all duration-150 ease-out scale-96 -translate-x-1',
+				actionsOpen && '!opacity-100 !pointer-events-auto !translate-x-0 !scale-100'
+			]}
 			aria-hidden={!actionsOpen}
 			use:keepEditorFocusRegion
 		>
@@ -171,152 +169,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.archived-task-content {
-		box-sizing: border-box;
-		min-width: 0;
-		font-size: 1rem;
-		line-height: 1.4;
-		padding-block: 0.125rem;
-		white-space: pre-wrap;
-		word-break: break-word;
-	}
-
-	.archived-task-content.is-muted {
-		text-decoration: line-through;
-	}
-
-	.archived-task-content :global(p) {
-		margin: 0;
-	}
-
-	.archived-task-content :global(p + p) {
-		margin-top: 0.25rem;
-	}
-
-	.archived-task-content :global(ul),
-	.archived-task-content :global(ol) {
-		margin: 0.25rem 0 0;
-		padding-left: 1.25rem;
-	}
-
-	.archived-task-content :global(ul) {
-		list-style: disc;
-	}
-
-	.archived-task-content :global(ol) {
-		list-style: decimal;
-	}
-
-	.archived-task-content :global(li) {
-		margin: 0.15rem 0;
-		padding-left: 0.1rem;
-	}
-
-	.archived-task-content :global(li p) {
-		margin: 0;
-	}
-
-	.archived-task-content :global(h1),
-	.archived-task-content :global(h2),
-	.archived-task-content :global(h3) {
-		margin: 0;
-		font-weight: 650;
-		letter-spacing: -0.025em;
-		line-height: 1.15;
-	}
-
-	.archived-task-content :global(h1) {
-		font-size: 1.25rem;
-	}
-
-	.archived-task-content :global(h2) {
-		font-size: 1.08rem;
-	}
-
-	.archived-task-content :global(h3) {
-		font-size: 1rem;
-	}
-
-	.archived-task-content :global(code) {
-		padding: 0.05em 0.3em;
-		border-radius: 0.3rem;
-		background: rgb(0 0 0 / 6%);
-		font-family:
-			ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-		font-size: 0.82em;
-	}
-
-	.archived-task-content :global(a) {
-		color: inherit;
-		text-decoration: underline;
-		text-decoration-color: currentColor;
-	}
-
-	.task-flag-corner {
-		position: absolute;
-		top: 0;
-		right: 0;
-		width: 1.15rem;
-		height: 1.15rem;
-		border-top-right-radius: 0.75rem;
-		background: color-mix(in oklab, var(--color-warning) 72%, transparent);
-		clip-path: polygon(100% 0, 0 0, 100% 100%);
-		pointer-events: none;
-	}
-
-	.task-left-action,
-	.task-menu-panel {
-		position: absolute;
-		z-index: 50;
-		opacity: 0;
-		pointer-events: none;
-		transition:
-			opacity 120ms ease-out,
-			transform 140ms cubic-bezier(0.2, 0, 0, 1);
-	}
-
-	.task-left-action {
-		top: 0.65rem;
-		right: calc(100% + 0.45rem);
-		transform: translateX(0.25rem) scale(0.96);
-	}
-
-	.task-check-button {
-		box-shadow:
-			0 3px 10px rgb(0 0 0 / 10%),
-			0 1px 2px rgb(0 0 0 / 10%);
-	}
-
-	.task-menu-panel {
-		top: 0;
-		left: calc(100% + 0.45rem);
-		width: fit-content;
-		min-width: max-content;
-		border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
-		border-radius: 1rem;
-		background: color-mix(in oklab, var(--color-base-100) 94%, transparent);
-		padding: 0.35rem;
-		box-shadow:
-			0 10px 24px rgb(0 0 0 / 10%),
-			0 1px 2px rgb(0 0 0 / 8%);
-		backdrop-filter: blur(16px);
-		transform: translateX(-0.25rem) scale(0.96);
-		transform-origin: top left;
-	}
-
-	.task-left-action.is-open,
-	.task-menu-panel.is-open {
-		opacity: 1;
-		pointer-events: auto;
-		transform: translateX(0) scale(1);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.task-left-action,
-		.task-menu-panel {
-			transition: none;
-		}
-	}
-</style>

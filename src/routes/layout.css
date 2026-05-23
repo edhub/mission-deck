@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '$lib/features/editor/task-content.css';
 @plugin 'daisyui' {
 	themes: light --default;
 }
@@ -63,4 +64,12 @@
 	button {
 		cursor: default;
 	}
+}
+
+/* Third-party DOM overrides (svelte-dnd-action) */
+.deck-dndzone > *:focus,
+.deck-dndzone > *:focus-visible,
+#dnd-action-dragged-el:focus,
+#dnd-action-dragged-el:focus-visible {
+	outline: none;
 }

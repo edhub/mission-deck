@@ -1,0 +1,180 @@
+/*
+ * Styles for Tiptap-rendered DOM.
+ * These nodes are created by Tiptap / rendered via {@html}, so we can't add
+ * Tailwind classes to them — global CSS selectors are the only option.
+ *
+ * Principle: "Tailwind for your elements, CSS file for their elements."
+ */
+
+.task-content {
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 1.4em;
+	outline: none;
+	color: inherit;
+	font-size: 1rem;
+	line-height: 1.4;
+	padding-block: 0.125rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+/* ── Typography ───────────────────────────────────────────────── */
+
+.task-content p {
+	margin: 0;
+}
+
+.task-content p + p {
+	margin-top: 0.25rem;
+}
+
+.task-content h1,
+.task-content h2,
+.task-content h3 {
+	margin: 0;
+	font-weight: 650;
+	letter-spacing: -0.025em;
+	line-height: 1.15;
+}
+
+.task-content h1 {
+	font-size: 1.25rem;
+}
+
+.task-content h2 {
+	font-size: 1.08rem;
+}
+
+.task-content h3 {
+	font-size: 1rem;
+}
+
+.task-content h1 + p,
+.task-content h2 + p,
+.task-content h3 + p,
+.task-content p + h1,
+.task-content p + h2,
+.task-content p + h3 {
+	margin-top: 0.35rem;
+}
+
+.task-content code {
+	padding: 0.05em 0.3em;
+	border-radius: 0.3rem;
+	background: rgb(0 0 0 / 6%);
+	font-family:
+		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+	font-size: 0.82em;
+}
+
+.task-content a {
+	color: var(--color-primary);
+	text-decoration: underline;
+	text-decoration-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
+}
+
+/* ── Lists ────────────────────────────────────────────────────── */
+
+.task-content ul,
+.task-content ol {
+	margin: 0.25rem 0 0;
+	padding-left: 1.25rem;
+}
+
+.task-content ul {
+	list-style: disc;
+}
+
+.task-content ol {
+	list-style: decimal;
+}
+
+.task-content ul ul,
+.task-content ol ul {
+	list-style: circle;
+}
+
+.task-content li {
+	margin: 0.15rem 0;
+	padding-left: 0.1rem;
+}
+
+.task-content li p {
+	margin: 0;
+}
+
+/* ── Task list (checkboxes) ───────────────────────────────────── */
+
+.task-content ul[data-type='taskList'] {
+	list-style: none;
+	padding-left: 0;
+}
+
+.task-content ul[data-type='taskList'] li {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: start;
+	column-gap: 0.45rem;
+	padding-left: 0;
+	white-space: normal;
+}
+
+.task-content ul[data-type='taskList'] li > label {
+	display: inline-flex;
+	align-items: center;
+	margin-top: 0.26rem;
+	user-select: none;
+}
+
+.task-content ul[data-type='taskList'] li input {
+	width: 0.9rem;
+	height: 0.9rem;
+	accent-color: var(--color-primary);
+}
+
+.task-content ul[data-type='taskList'] li input:checked {
+	accent-color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+
+.task-content ul[data-type='taskList'] li > div {
+	min-width: 0;
+	white-space: pre-wrap;
+}
+
+.task-content ul[data-type='taskList'] li[data-checked='true'] > div,
+.task-content ul[data-type='taskList'] li[data-checked='true'] > div * {
+	color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+	text-decoration: line-through;
+}
+
+/* ── Muted state (completed tasks) ────────────────────────────── */
+
+.task-content.is-muted {
+	text-decoration: line-through;
+}
+
+.task-content.is-muted a {
+	color: inherit;
+	text-decoration: line-through;
+	text-decoration-color: currentColor;
+}
+
+.task-content.is-muted ul[data-type='taskList'] li[data-checked='true'] > div,
+.task-content.is-muted ul[data-type='taskList'] li[data-checked='true'] > div * {
+	color: inherit;
+}
+
+/* ── Project title variant ────────────────────────────────────── */
+
+.task-content.is-project-title {
+	font-size: 1rem;
+	padding-block: 0;
+	color: color-mix(in oklch, currentColor 78%, transparent);
+}
+
+.task-content.is-project-title h1,
+.task-content.is-project-title h2,
+.task-content.is-project-title h3 {
+	color: var(--color-base-content);
+}
