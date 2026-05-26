@@ -1,18 +1,61 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { flip } from 'svelte/animate';
 	import { dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import ProjectColumn from '$lib/features/deck/ProjectColumn.svelte';
 	import { deck } from '$lib/features/deck/state.svelte';
+	import SearchOverlay from '$lib/features/search/SearchOverlay.svelte';
+	import SearchChip from '$lib/features/search/SearchChip.svelte';
+	import { isImeEvent, search } from '$lib/features/search/state.svelte';
 	import { getShelfToken, setShelfToken } from '$lib/features/sync/session';
 	import SyncPanel from '$lib/features/sync/SyncPanel.svelte';
-	import type { Project } from '$lib/features/deck/types';
+	import type { Project, Task } from '$lib/features/deck/types';
 
 	let sidebarOpen = $state(false);
 	let dragItems = $state<Project[] | null>(null);
 	let importInput = $state<HTMLInputElement>();
-	const items = $derived(dragItems ?? deck.activeProjects);
+	const filteredActive = $derived.by(() => {
+		const map = new SvelteMap<string, Task[]>();
+		for (const project of deck.activeProjects) {
+			const tasks = deck.activeTasksForProject(project.id);
+			map.set(
+				project.id,
+				search.active ? tasks.filter((task) => search.matches(task.content)) : tasks
+			);
+		}
+		return map;
+	});
+
+	const items = $derived.by(() => {
+		const base = dragItems ?? deck.activeProjects;
+		if (!search.active) return base;
+		return base.filter((project) => (filteredActive.get(project.id)?.length ?? 0) > 0);
+	});
+
+	const totalMatchCount = $derived(
+		search.active
+			? Array.from(filteredActive.values()).reduce((sum, tasks) => sum + tasks.length, 0)
+			: 0
+	);
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		if (isImeEvent(event)) return;
+		if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {
+			event.preventDefault();
+			if (search.overlayOpen) search.close();
+			else search.open();
+		}
+	}
+
+	function handleGlobalMousedown(event: MouseEvent) {
+		if (!search.overlayOpen) return;
+		const target = event.target as HTMLElement | null;
+		if (!target?.closest('[data-search-overlay-panel]')) {
+			search.close();
+		}
+	}
 
 	function handleConsider(event: CustomEvent<DndEvent<Project>>) {
 		dragItems = event.detail.items;
@@ -85,7 +128,8 @@
 					type: 'project',
 					dropTargetStyle: {},
 					zoneTabIndex: -1,
-					zoneItemTabIndex: -1
+					zoneItemTabIndex: -1,
+					dragDisabled: search.active
 				}}
 				onconsider={handleConsider}
 				onfinalize={handleFinalize}
@@ -100,8 +144,9 @@
 					>
 						<ProjectColumn
 							{project}
-							activeTasks={deck.activeTasksForProject(project.id)}
-							archivedTasks={deck.archivedTasksForProject(project.id)}
+							activeTasks={filteredActive.get(project.id) ?? []}
+							archivedTasks={search.active ? [] : deck.archivedTasksForProject(project.id)}
+							searchActive={search.active}
 							onRenameProject={(projectId, name) => deck.renameProject(projectId, name)}
 							onCompleteProject={(projectId) => deck.completeProject(projectId)}
 							onDeleteProject={(projectId) => deck.deleteProject(projectId)}
@@ -118,21 +163,23 @@
 				{/each}
 			</div>
 
-			<section class="grid max-h-full w-80 shrink-0 place-items-center px-0.5 pt-10 pb-3">
-				<button
-					class="group grid h-full min-h-48 w-full place-items-center rounded-3xl border border-dashed border-base-content/12 bg-base-100/24 text-base-content/45 transition hover:border-primary/25 hover:bg-base-100/55 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary/50"
-					onclick={() => deck.addProject()}
-					aria-label="New project"
-				>
-					<span class="grid place-items-center gap-3">
-						<span
-							class="grid size-10 place-items-center rounded-full border border-current/20 bg-base-100/50 text-2xl leading-none transition group-hover:scale-105"
-							>+</span
-						>
-						<span class="text-sm font-semibold">New project</span>
-					</span>
-				</button>
-			</section>
+			{#if !search.active}
+				<section class="grid max-h-full w-80 shrink-0 place-items-center px-0.5 pt-10 pb-3">
+					<button
+						class="group grid h-full min-h-48 w-full place-items-center rounded-3xl border border-dashed border-base-content/12 bg-base-100/24 text-base-content/45 transition hover:border-primary/25 hover:bg-base-100/55 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary/50"
+						onclick={() => deck.addProject()}
+						aria-label="New project"
+					>
+						<span class="grid place-items-center gap-3">
+							<span
+								class="grid size-10 place-items-center rounded-full border border-current/20 bg-base-100/50 text-2xl leading-none transition group-hover:scale-105"
+								>+</span
+							>
+							<span class="text-sm font-semibold">New project</span>
+						</span>
+					</button>
+				</section>
+			{/if}
 		</main>
 	{/if}
 
@@ -168,6 +215,16 @@
 		</div>
 
 		<nav class="grid gap-1">
+			<button
+				class="btn justify-start btn-ghost btn-sm"
+				onclick={() => {
+					sidebarOpen = false;
+					search.open();
+				}}
+			>
+				Search
+				<span class="ml-auto text-xs opacity-50">⌘K</span>
+			</button>
 			<a class="btn justify-start btn-ghost btn-sm" href={resolve('/completed')}>
 				Completed projects
 				{#if deck.completedProjects.length > 0}
@@ -207,4 +264,9 @@
 	>
 		☰
 	</button>
+
+	<SearchChip matchCount={totalMatchCount} />
+	<SearchOverlay />
 </div>
+
+<svelte:window onkeydown={handleGlobalKeydown} onmousedown={handleGlobalMousedown} />

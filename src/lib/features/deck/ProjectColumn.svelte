@@ -9,6 +9,7 @@
 		project,
 		activeTasks,
 		archivedTasks,
+		searchActive = false,
 		onRenameProject,
 		onCompleteProject,
 		onDeleteProject,
@@ -24,6 +25,7 @@
 		project: Project;
 		activeTasks: Task[];
 		archivedTasks: Task[];
+		searchActive?: boolean;
 		onRenameProject: (projectId: string, name: string) => void;
 		onCompleteProject: (projectId: string) => void;
 		onDeleteProject: (projectId: string) => void;
@@ -87,7 +89,7 @@
 
 			<button
 				type="button"
-				class="btn absolute top-0 right-14 btn-circle text-base-content/45 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+				class="btn absolute top-0 right-7 btn-circle text-base-content/45 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
 				aria-label="Drag to reorder project"
 				tabindex="-1"
 				use:dragHandle
@@ -103,12 +105,6 @@
 					</g>
 				</svg>
 			</button>
-
-			<button
-				class="btn absolute top-0 right-7 btn-circle text-base-content/50 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100"
-				aria-label="Add task"
-				onclick={addTask}>+</button
-			>
 
 			<div class="dropdown absolute dropdown-end top-0 right-0">
 				<button
@@ -154,7 +150,8 @@
 				type: 'task',
 				dropTargetStyle: {},
 				zoneTabIndex: -1,
-				zoneItemTabIndex: -1
+				zoneItemTabIndex: -1,
+				dragDisabled: searchActive
 			}}
 			onconsider={handleTaskConsider}
 			onfinalize={handleTaskFinalize}
@@ -174,6 +171,17 @@
 				</div>
 			{/each}
 		</div>
+
+		{#if !searchActive}
+			<button
+				type="button"
+				class="btn mt-4 w-full justify-start border-dashed text-base-content/40 opacity-0 btn-ghost transition btn-sm group-hover:opacity-100 focus-visible:opacity-100"
+				aria-label="Add task"
+				onclick={addTask}
+			>
+				+ Add task
+			</button>
+		{/if}
 
 		{#if archivedTasks.length > 0}
 			<section class="mt-4">
