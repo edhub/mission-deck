@@ -113,6 +113,7 @@
 							onDeleteProject={(projectId) => deck.deleteProject(projectId)}
 							onToggleCompletedExpanded={(projectId) => deck.toggleCompletedExpanded(projectId)}
 							onAddTask={(projectId, tag, content) => deck.addTask(projectId, tag, content)}
+							onMoveTasks={(projectId, orderedIds) => deck.moveTasks(projectId, orderedIds)}
 							onToggleCompleted={(taskId) => deck.toggleTaskCompleted(taskId)}
 							onToggleFlag={(taskId) => deck.toggleTaskFlag(taskId)}
 							onUpdateContent={(taskId, content) => deck.updateTaskContent(taskId, content)}

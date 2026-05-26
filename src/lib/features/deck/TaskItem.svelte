@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dragHandle } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
 	import { floating } from '$lib/actions/floating';
 	import { portal } from '$lib/actions/portal';
@@ -108,6 +109,32 @@
 				class="pointer-events-none absolute top-0 right-0 size-[1.15rem] rounded-tr-xl bg-warning/72 [clip-path:polygon(100%_0,0_0,100%_100%)]"
 				aria-hidden="true"
 			></div>
+		{/if}
+
+		{#if !readOnly}
+			<button
+				type="button"
+				class={[
+					'btn absolute top-1 right-1 z-1 btn-circle text-base-content/40 opacity-0 transition btn-xs group-hover/task:opacity-100 focus-visible:opacity-100 active:cursor-grabbing',
+					task.flagged && !task.completed
+						? 'border-0 bg-base-100/95 hover:bg-base-200'
+						: 'btn-ghost'
+				]}
+				aria-label="Drag to reorder task"
+				tabindex="-1"
+				use:dragHandle
+			>
+				<svg viewBox="0 0 8 12" class="size-3" aria-hidden="true">
+					<g fill="currentColor">
+						<circle cx="2" cy="2" r="1" />
+						<circle cx="2" cy="6" r="1" />
+						<circle cx="2" cy="10" r="1" />
+						<circle cx="6" cy="2" r="1" />
+						<circle cx="6" cy="6" r="1" />
+						<circle cx="6" cy="10" r="1" />
+					</g>
+				</svg>
+			</button>
 		{/if}
 
 		{#if task.tag}

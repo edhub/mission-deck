@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { dragHandle } from 'svelte-dnd-action';
+	import { flip } from 'svelte/animate';
+	import { TRIGGERS, dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
 	import TaskItem from './TaskItem.svelte';
 	import type { Project, Task, TaskTag } from './types';
@@ -13,6 +14,7 @@
 		onDeleteProject,
 		onToggleCompletedExpanded,
 		onAddTask,
+		onMoveTasks,
 		onToggleCompleted,
 		onToggleFlag,
 		onUpdateContent,
@@ -27,6 +29,7 @@
 		onDeleteProject: (projectId: string) => void;
 		onToggleCompletedExpanded: (projectId: string) => void;
 		onAddTask: (projectId: string, tag: TaskTag | null, content?: string) => Promise<string>;
+		onMoveTasks: (projectId: string, orderedIds: string[]) => void;
 		onToggleCompleted: (taskId: string) => void;
 		onToggleFlag: (taskId: string) => void;
 		onUpdateContent: (taskId: string, content: string) => void;
@@ -35,9 +38,36 @@
 	} = $props();
 
 	let autofocusTaskId = $state<string | undefined>();
+	let dragTasks = $state<Task[] | null>(null);
+	const taskItems = $derived(dragTasks ?? activeTasks);
 
 	async function addTask() {
 		autofocusTaskId = await onAddTask(project.id, null, '');
+	}
+
+	function handleTaskConsider(event: CustomEvent<DndEvent<Task>>) {
+		// Suppress the library's "snap back to origin" preview when the dragged
+		// item is outside every zone — otherwise the source column visibly
+		// re-inserts and removes the shadow as the cursor drifts in/out of
+		// any task zone.
+		if (event.detail.info.trigger === TRIGGERS.DRAGGED_LEFT_ALL) return;
+		dragTasks = event.detail.items;
+	}
+
+	function handleTaskFinalize(event: CustomEvent<DndEvent<Task>>) {
+		// Released outside any zone — treat as cancel; leave deck state untouched.
+		// Cross-column cancel (origin receives DROPPED_INTO_ANOTHER) is safe because
+		// the library re-inserts the shadow into the origin's items on DRAGGED_LEFT_ALL,
+		// so this column's items still represent the original order.
+		if (event.detail.info.trigger === TRIGGERS.DROPPED_OUTSIDE_OF_ANY) {
+			dragTasks = null;
+			return;
+		}
+		onMoveTasks(
+			project.id,
+			event.detail.items.map((task) => task.id)
+		);
+		dragTasks = null;
 	}
 </script>
 
@@ -59,6 +89,7 @@
 				type="button"
 				class="btn absolute top-0 right-14 btn-circle text-base-content/45 opacity-0 btn-ghost transition btn-xs group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
 				aria-label="Drag to reorder project"
+				tabindex="-1"
 				use:dragHandle
 			>
 				<svg viewBox="0 0 8 12" class="size-3" aria-hidden="true">
@@ -115,18 +146,32 @@
 			</div>
 		</header>
 
-		<div class="grid min-h-1 gap-6">
-			{#each activeTasks as task (task.id)}
-				<TaskItem
-					{task}
-					{onToggleCompleted}
-					{onToggleFlag}
-					{onUpdateContent}
-					{onSetTag}
-					{onDelete}
-					autofocus={task.id === autofocusTaskId}
-					onAutofocused={() => (autofocusTaskId = undefined)}
-				/>
+		<div
+			class="grid min-h-1 gap-6"
+			use:dragHandleZone={{
+				items: taskItems,
+				flipDurationMs: 180,
+				type: 'task',
+				dropTargetStyle: {},
+				zoneTabIndex: -1,
+				zoneItemTabIndex: -1
+			}}
+			onconsider={handleTaskConsider}
+			onfinalize={handleTaskFinalize}
+		>
+			{#each taskItems as task (task.id)}
+				<div animate:flip={{ duration: 180 }}>
+					<TaskItem
+						{task}
+						{onToggleCompleted}
+						{onToggleFlag}
+						{onUpdateContent}
+						{onSetTag}
+						{onDelete}
+						autofocus={task.id === autofocusTaskId}
+						onAutofocused={() => (autofocusTaskId = undefined)}
+					/>
+				</div>
 			{/each}
 		</div>
 

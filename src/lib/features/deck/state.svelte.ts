@@ -307,7 +307,31 @@ class DeckState {
 			project.updatedAt = timestamp;
 			updated.push(project);
 		}
-		await Promise.all(updated.map((p) => saveProject(projectSnapshot(p))));
+		try {
+			await Promise.all(updated.map((p) => saveProject(projectSnapshot(p))));
+		} catch (error) {
+			console.error('Failed to persist project reorder', error);
+		}
+	}
+
+	async moveTasks(projectId: string, orderedIds: string[]) {
+		const timestamp = now();
+		const updated: Task[] = [];
+		for (let i = 0; i < orderedIds.length; i++) {
+			const task = this.tasks.find((t) => t.id === orderedIds[i]);
+			if (!task) continue;
+			const nextOrder = ORDER_STEP * (i + 1);
+			if (task.projectId === projectId && task.order === nextOrder) continue;
+			task.projectId = projectId;
+			task.order = nextOrder;
+			task.updatedAt = timestamp;
+			updated.push(task);
+		}
+		try {
+			await Promise.all(updated.map((t) => saveTask(taskSnapshot(t))));
+		} catch (error) {
+			console.error('Failed to persist task move', error);
+		}
 	}
 
 	async completeProject(projectId: string) {
