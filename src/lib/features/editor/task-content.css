@@ -145,7 +145,6 @@
 .task-content ul[data-type='taskList'] li[data-checked='true'] > div,
 .task-content ul[data-type='taskList'] li[data-checked='true'] > div * {
 	color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
-	text-decoration: line-through;
 }
 
 /* ── Muted state (completed tasks) ────────────────────────────── */

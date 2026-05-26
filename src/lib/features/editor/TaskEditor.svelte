@@ -76,6 +76,13 @@
 	}
 
 	$effect(() => {
+		if (!editor) return;
+		const dom = editor.view.dom;
+		if (muted) dom.classList.add('is-muted');
+		else dom.classList.remove('is-muted');
+	});
+
+	$effect(() => {
 		if (editable && host && !editor) mount(host);
 	});
 
