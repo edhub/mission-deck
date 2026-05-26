@@ -3,6 +3,7 @@
 	import { Editor } from '@tiptap/core';
 	import { taskExtensions } from './extensions';
 	import { normalizeContent, sanitizeTiptapHtml, type EditorDefaultTag } from './content';
+	import { setSearchHighlight } from './searchHighlight';
 
 	let {
 		content,
@@ -14,7 +15,8 @@
 		onAutofocused,
 		surfaceClass = '',
 		defaultTag = 'p',
-		muted = false
+		muted = false,
+		highlight = ''
 	}: {
 		content: string;
 		editable?: boolean;
@@ -26,6 +28,7 @@
 		surfaceClass?: string;
 		defaultTag?: EditorDefaultTag;
 		muted?: boolean;
+		highlight?: string;
 	} = $props();
 
 	let host: HTMLDivElement | undefined = $state();
@@ -98,6 +101,11 @@
 	$effect(() => {
 		if (!editor) return;
 		if (editor.isEditable !== editable) editor.setEditable(editable);
+	});
+
+	$effect(() => {
+		if (!editor) return;
+		setSearchHighlight(editor, highlight);
 	});
 
 	$effect(() => {

@@ -4,6 +4,7 @@ import { canSplit } from '@tiptap/pm/transform';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
+import { SearchHighlight } from './searchHighlight';
 
 export interface TaskKeymapOptions {
 	onEnter?: () => boolean;
@@ -72,6 +73,7 @@ export function taskExtensions(options: TaskKeymapOptions = {}) {
 		TaskItem.configure({
 			nested: true
 		}),
-		TaskKeymap.configure(options)
+		TaskKeymap.configure(options),
+		SearchHighlight
 	];
 }

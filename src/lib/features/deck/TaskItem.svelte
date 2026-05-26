@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { dragHandle } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
+	import { search } from '$lib/features/search/state.svelte';
 	import { TASK_TAG_ACCENTS, TASK_TAG_LABELS, TASK_TAGS, type Task, type TaskTag } from './types';
 
 	let {
@@ -150,6 +151,7 @@
 				content={task.content}
 				editable={!readOnly}
 				muted={task.completed}
+				highlight={search.normalizedQuery}
 				{autofocus}
 				{onAutofocused}
 				onFocus={() => (editorFocused = true)}

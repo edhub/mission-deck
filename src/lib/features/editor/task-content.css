@@ -74,6 +74,12 @@
 	text-decoration-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
 }
 
+.task-content .search-hit {
+	background: color-mix(in oklab, var(--color-warning) 45%, transparent);
+	border-radius: 0.15em;
+	padding: 0 0.05em;
+}
+
 /* ── Lists ────────────────────────────────────────────────────── */
 
 .task-content ul,
