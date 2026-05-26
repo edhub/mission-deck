@@ -93,17 +93,11 @@
 				{#each items as project, index (project.id)}
 					<div
 						class={[
-							'relative max-h-full shrink-0 overflow-hidden focus-within:z-20',
+							'relative max-h-full shrink-0 overflow-visible focus-within:z-20',
 							index === 0 && 'pl-9'
 						]}
 						animate:flip={{ duration: 180 }}
 					>
-						{#if index > 0}
-							<div
-								class="pointer-events-none absolute top-3 bottom-3 -left-4 w-px bg-base-content/15"
-							></div>
-						{/if}
-
 						<ProjectColumn
 							{project}
 							activeTasks={deck.activeTasksForProject(project.id)}

@@ -73,7 +73,7 @@
 
 <article class="group relative h-full max-h-full w-80 shrink-0">
 	<div
-		class="h-full max-h-full [scrollbar-width:none] overflow-y-auto pt-1.5 pb-40 [&::-webkit-scrollbar]:hidden"
+		class="-mx-8 h-full max-h-full [scrollbar-width:none] overflow-y-auto px-8 pt-1.5 pb-40 [&::-webkit-scrollbar]:hidden"
 	>
 		<header class="relative px-0.5 pb-6">
 			<div class="min-w-0">

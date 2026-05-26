@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { dragHandle } from 'svelte-dnd-action';
 	import { TaskEditor } from '$lib/features/editor';
-	import { floating } from '$lib/actions/floating';
-	import { portal } from '$lib/actions/portal';
 	import { TASK_TAG_ACCENTS, TASK_TAG_LABELS, TASK_TAGS, type Task, type TaskTag } from './types';
 
 	let {
@@ -29,17 +27,6 @@
 
 	let editorFocused = $state(false);
 	let actionsOpen = $derived(editorFocused && !readOnly);
-	let taskRow = $state<HTMLElement | null>(null);
-
-	const GAP = 7.2;
-
-	function positionLeft(rect: DOMRect) {
-		return { top: rect.top + 10, right: window.innerWidth - rect.left + GAP };
-	}
-
-	function positionRight(rect: DOMRect) {
-		return { top: rect.top, left: rect.right + GAP };
-	}
 
 	function keepEditorFocusRegion(node: HTMLElement) {
 		const keepFocus = (event: MouseEvent) => event.preventDefault();
@@ -69,16 +56,14 @@
 	}
 </script>
 
-<div bind:this={taskRow}>
+<div class="relative">
 	{#if !readOnly}
 		<div
 			class={[
-				'pointer-events-none z-50 translate-x-1 scale-96 opacity-0 transition duration-150 ease-out',
+				'pointer-events-none absolute top-2 right-full z-50 mr-1 origin-right translate-x-1 scale-96 opacity-0 transition duration-150 ease-out',
 				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
-			use:portal
-			use:floating={{ reference: taskRow, position: positionLeft }}
 			use:keepEditorFocusRegion
 		>
 			<button
@@ -96,6 +81,25 @@
 				✓
 			</button>
 		</div>
+
+		<div
+			class={[
+				'pointer-events-none absolute top-2 left-full z-50 ml-1 grid origin-left -translate-x-1 scale-96 gap-1 opacity-0 transition duration-150 ease-out',
+				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
+			]}
+			aria-hidden={!actionsOpen}
+			use:keepEditorFocusRegion
+		>
+			<button
+				class="btn btn-square rounded-full border-0 bg-base-100 text-error/75 shadow-[0_3px_10px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/10%)] btn-xs hover:bg-base-200 hover:text-error"
+				tabindex="-1"
+				aria-label="Delete task"
+				title="Delete task"
+				onclick={deleteTask}
+			>
+				×
+			</button>
+		</div>
 	{/if}
 
 	<div
@@ -106,7 +110,7 @@
 	>
 		{#if task.flagged && !task.completed}
 			<div
-				class="pointer-events-none absolute top-0 right-0 size-[1.15rem] rounded-tr-xl bg-warning/72 [clip-path:polygon(100%_0,0_0,100%_100%)]"
+				class="pointer-events-none absolute top-0 left-0 size-[1.15rem] rounded-tl-xl bg-warning/72 [clip-path:polygon(0_0,100%_0,0_100%)]"
 				aria-hidden="true"
 			></div>
 		{/if}
@@ -114,12 +118,7 @@
 		{#if !readOnly}
 			<button
 				type="button"
-				class={[
-					'btn absolute top-1 right-1 z-1 btn-circle text-base-content/40 opacity-0 transition btn-xs group-hover/task:opacity-100 focus-visible:opacity-100 active:cursor-grabbing',
-					task.flagged && !task.completed
-						? 'border-0 bg-base-100/95 hover:bg-base-200'
-						: 'btn-ghost'
-				]}
+				class="btn absolute top-1 right-1 z-1 btn-circle text-base-content/40 opacity-0 btn-ghost transition btn-xs group-hover/task:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
 				aria-label="Drag to reorder task"
 				tabindex="-1"
 				use:dragHandle
@@ -142,12 +141,6 @@
 				class={['absolute inset-y-2 left-0 w-0.5 rounded-full', TASK_TAG_ACCENTS[task.tag]]}
 				aria-hidden="true"
 			></div>
-
-			<div
-				class="absolute -top-2 left-3 rounded-full bg-base-100 px-1 text-[0.64rem] leading-none font-medium tracking-wide text-base-content/40 transition group-focus-within/task:text-base-content/55 group-hover/task:text-base-content/55"
-			>
-				{TASK_TAG_LABELS[task.tag]}
-			</div>
 		{/if}
 
 		<div class="min-w-0">
@@ -167,49 +160,37 @@
 	{#if !readOnly}
 		<div
 			class={[
-				'pointer-events-none z-50 w-fit min-w-max origin-top-left -translate-x-1 scale-96 rounded-2xl border border-base-content/10 bg-base-100/94 p-1.5 opacity-0 shadow-[0_10px_24px_rgb(0_0_0/10%),0_1px_2px_rgb(0_0_0/8%)] backdrop-blur-lg transition duration-150 ease-out',
-				actionsOpen && '!pointer-events-auto !translate-x-0 !scale-100 !opacity-100'
+				'pointer-events-none absolute right-0 bottom-full z-50 flex w-full origin-bottom-right translate-y-1 scale-96 items-center justify-end gap-1 px-2 opacity-0 transition duration-150 ease-out',
+				actionsOpen && '!pointer-events-auto !translate-y-0 !scale-100 !opacity-100'
 			]}
 			aria-hidden={!actionsOpen}
-			use:portal
-			use:floating={{ reference: taskRow, position: positionRight }}
 			use:keepEditorFocusRegion
 		>
-			<div class="flex items-center gap-1 border-b border-base-content/8 px-1 pb-1">
+			<button
+				class={[
+					'p-1 text-[0.68rem] leading-none font-medium whitespace-nowrap text-base-content/50 transition hover:text-base-content/80',
+					task.flagged && 'text-primary hover:text-primary'
+				]}
+				tabindex="-1"
+				aria-label={task.flagged ? 'Unflag task' : 'Flag task'}
+				title={task.flagged ? 'Unflag task' : 'Flag task'}
+				onclick={toggleFlag}
+			>
+				Flag
+			</button>
+			<div class="flex-1"></div>
+			{#each TASK_TAGS as tag (tag)}
 				<button
-					class={[task.flagged && 'text-warning', 'btn btn-square rounded-full btn-ghost btn-xs']}
+					class={[
+						'p-1 text-[0.68rem] leading-none font-medium whitespace-nowrap text-base-content/50 transition hover:text-base-content/80',
+						tag === task.tag && 'text-primary hover:text-primary'
+					]}
 					tabindex="-1"
-					aria-label={task.flagged ? 'Unflag task' : 'Flag task'}
-					title={task.flagged ? 'Unflag task' : 'Flag task'}
-					onclick={toggleFlag}
+					onclick={() => setTag(tag)}
 				>
-					★
+					{TASK_TAG_LABELS[tag]}
 				</button>
-				<button
-					class="btn btn-square rounded-full text-error/75 btn-ghost btn-xs hover:text-error"
-					tabindex="-1"
-					aria-label="Delete task"
-					title="Delete task"
-					onclick={deleteTask}
-				>
-					×
-				</button>
-			</div>
-
-			<div class="grid gap-0.5 pt-1">
-				{#each TASK_TAGS as tag (tag)}
-					<button
-						class={[
-							'btn h-6 min-h-6 justify-start rounded-lg px-2 text-xs font-medium whitespace-nowrap btn-ghost',
-							tag === task.tag && 'bg-primary/10 text-primary'
-						]}
-						tabindex="-1"
-						onclick={() => setTag(tag)}
-					>
-						{TASK_TAG_LABELS[tag]}
-					</button>
-				{/each}
-			</div>
+			{/each}
 		</div>
 	{/if}
 </div>
