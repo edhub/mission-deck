@@ -12,7 +12,8 @@
 		onDelete,
 		autofocus = false,
 		onAutofocused,
-		readOnly = false
+		readOnly = false,
+		draggable = true
 	}: {
 		task: Task;
 		onToggleCompleted: (taskId: string) => void;
@@ -23,6 +24,7 @@
 		autofocus?: boolean;
 		onAutofocused?: () => void;
 		readOnly?: boolean;
+		draggable?: boolean;
 	} = $props();
 
 	let editorFocused = $state(false);
@@ -115,7 +117,7 @@
 			></div>
 		{/if}
 
-		{#if !readOnly}
+		{#if !readOnly && draggable}
 			<button
 				type="button"
 				class="btn absolute top-1 right-1 z-1 btn-circle text-base-content/40 opacity-0 btn-ghost transition btn-xs group-hover/task:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
